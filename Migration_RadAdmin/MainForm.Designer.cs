@@ -1,0 +1,177 @@
+﻿namespace Migration_RadAdmin
+{
+    partial class MainForm
+    {
+        /// <summary>
+        ///  Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        ///  Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        ///  Required method for Designer support - do not modify
+        ///  the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            titleText = new Label();
+            statusText = new Label();
+            dotnetLabel = new Label();
+            dotnetProgress = new ProgressBar();
+            chromeProgress = new ProgressBar();
+            chromeLabel = new Label();
+            userProgress = new ProgressBar();
+            userLabel = new Label();
+            cleanProgress = new ProgressBar();
+            servicesLabel = new Label();
+            SuspendLayout();
+            // 
+            // titleText
+            // 
+            titleText.AutoSize = true;
+            titleText.Font = new Font("Segoe UI", 24F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            titleText.Location = new Point(9, 9);
+            titleText.Margin = new Padding(0);
+            titleText.Name = "titleText";
+            titleText.Size = new Size(387, 45);
+            titleText.TabIndex = 0;
+            titleText.Text = "Radianse Migration Tool";
+            titleText.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // statusText
+            // 
+            statusText.AutoSize = true;
+            statusText.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            statusText.Location = new Point(12, 64);
+            statusText.Margin = new Padding(0, 10, 0, 0);
+            statusText.Name = "statusText";
+            statusText.Size = new Size(262, 30);
+            statusText.TabIndex = 1;
+            statusText.Text = "Ready to begin migration...";
+            statusText.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // dotnetLabel
+            // 
+            dotnetLabel.AutoSize = true;
+            dotnetLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            dotnetLabel.Location = new Point(15, 104);
+            dotnetLabel.Margin = new Padding(0);
+            dotnetLabel.Name = "dotnetLabel";
+            dotnetLabel.Size = new Size(126, 21);
+            dotnetLabel.TabIndex = 2;
+            dotnetLabel.Text = "Install .NET SDKs";
+            dotnetLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // dotnetProgress
+            // 
+            dotnetProgress.Location = new Point(15, 128);
+            dotnetProgress.Name = "dotnetProgress";
+            dotnetProgress.Size = new Size(773, 23);
+            dotnetProgress.TabIndex = 3;
+            // 
+            // chromeProgress
+            // 
+            chromeProgress.Location = new Point(15, 195);
+            chromeProgress.Name = "chromeProgress";
+            chromeProgress.Size = new Size(773, 23);
+            chromeProgress.TabIndex = 5;
+            // 
+            // chromeLabel
+            // 
+            chromeLabel.AutoSize = true;
+            chromeLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            chromeLabel.Location = new Point(15, 171);
+            chromeLabel.Margin = new Padding(0);
+            chromeLabel.Name = "chromeLabel";
+            chromeLabel.Size = new Size(126, 21);
+            chromeLabel.TabIndex = 4;
+            chromeLabel.Text = "Install Chrome";
+            chromeLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // userProgress
+            // 
+            userProgress.Location = new Point(15, 263);
+            userProgress.Name = "userProgress";
+            userProgress.Size = new Size(773, 23);
+            userProgress.TabIndex = 7;
+            // 
+            // userLabel
+            // 
+            userLabel.AutoSize = true;
+            userLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            userLabel.Location = new Point(15, 239);
+            userLabel.Margin = new Padding(0);
+            userLabel.Name = "userLabel";
+            userLabel.Size = new Size(126, 21);
+            userLabel.TabIndex = 6;
+            userLabel.Text = "Update Users";
+            userLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // cleanProgress
+            // 
+            cleanProgress.Location = new Point(15, 330);
+            cleanProgress.Name = "cleanProgress";
+            cleanProgress.Size = new Size(773, 23);
+            cleanProgress.TabIndex = 9;
+            // 
+            // servicesLabel
+            // 
+            servicesLabel.AutoSize = true;
+            servicesLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            servicesLabel.Location = new Point(15, 306);
+            servicesLabel.Margin = new Padding(0);
+            servicesLabel.Name = "servicesLabel";
+            servicesLabel.Size = new Size(126, 21);
+            servicesLabel.TabIndex = 8;
+            servicesLabel.Text = "Remove Radianse Services";
+            servicesLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // MainForm
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(800, 450);
+            Controls.Add(cleanProgress);
+            Controls.Add(servicesLabel);
+            Controls.Add(userProgress);
+            Controls.Add(userLabel);
+            Controls.Add(chromeProgress);
+            Controls.Add(chromeLabel);
+            Controls.Add(dotnetProgress);
+            Controls.Add(dotnetLabel);
+            Controls.Add(statusText);
+            Controls.Add(titleText);
+            Name = "MainForm";
+            Text = "Radianse Migration Tool";
+            ResumeLayout(false);
+            PerformLayout();
+        }
+
+        #endregion
+
+        private Label titleText;
+        private Label statusText;
+        private Label dotnetLabel;
+        private ProgressBar dotnetProgress;
+        private ProgressBar chromeProgress;
+        private Label chromeLabel;
+        private ProgressBar userProgress;
+        private Label userLabel;
+        private ProgressBar cleanProgress;
+        private Label servicesLabel;
+    }
+}
