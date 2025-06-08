@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             titleText = new Label();
             statusText = new Label();
             dotnetLabel = new Label();
@@ -38,13 +39,18 @@
             userLabel = new Label();
             cleanProgress = new ProgressBar();
             servicesLabel = new Label();
+            startButton = new Button();
+            stopButton = new Button();
+            outputBox = new TextBox();
+            pictureBox1 = new PictureBox();
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
             // 
             // titleText
             // 
             titleText.AutoSize = true;
             titleText.Font = new Font("Segoe UI", 24F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            titleText.Location = new Point(9, 9);
+            titleText.Location = new Point(2, 9);
             titleText.Margin = new Padding(0);
             titleText.Name = "titleText";
             titleText.Size = new Size(387, 45);
@@ -56,7 +62,7 @@
             // 
             statusText.AutoSize = true;
             statusText.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            statusText.Location = new Point(12, 64);
+            statusText.Location = new Point(7, 65);
             statusText.Margin = new Padding(0, 10, 0, 0);
             statusText.Name = "statusText";
             statusText.Size = new Size(262, 30);
@@ -67,25 +73,25 @@
             // dotnetLabel
             // 
             dotnetLabel.AutoSize = true;
-            dotnetLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            dotnetLabel.Location = new Point(15, 104);
+            dotnetLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            dotnetLabel.Location = new Point(9, 104);
             dotnetLabel.Margin = new Padding(0);
             dotnetLabel.Name = "dotnetLabel";
-            dotnetLabel.Size = new Size(126, 21);
+            dotnetLabel.Size = new Size(106, 17);
             dotnetLabel.TabIndex = 2;
             dotnetLabel.Text = "Install .NET SDKs";
             dotnetLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // dotnetProgress
             // 
-            dotnetProgress.Location = new Point(15, 128);
+            dotnetProgress.Location = new Point(12, 124);
             dotnetProgress.Name = "dotnetProgress";
             dotnetProgress.Size = new Size(773, 23);
             dotnetProgress.TabIndex = 3;
             // 
             // chromeProgress
             // 
-            chromeProgress.Location = new Point(15, 195);
+            chromeProgress.Location = new Point(12, 191);
             chromeProgress.Name = "chromeProgress";
             chromeProgress.Size = new Size(773, 23);
             chromeProgress.TabIndex = 5;
@@ -93,18 +99,18 @@
             // chromeLabel
             // 
             chromeLabel.AutoSize = true;
-            chromeLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            chromeLabel.Location = new Point(15, 171);
+            chromeLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            chromeLabel.Location = new Point(9, 171);
             chromeLabel.Margin = new Padding(0);
             chromeLabel.Name = "chromeLabel";
-            chromeLabel.Size = new Size(126, 21);
+            chromeLabel.Size = new Size(91, 17);
             chromeLabel.TabIndex = 4;
             chromeLabel.Text = "Install Chrome";
             chromeLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // userProgress
             // 
-            userProgress.Location = new Point(15, 263);
+            userProgress.Location = new Point(12, 259);
             userProgress.Name = "userProgress";
             userProgress.Size = new Size(773, 23);
             userProgress.TabIndex = 7;
@@ -112,18 +118,18 @@
             // userLabel
             // 
             userLabel.AutoSize = true;
-            userLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            userLabel.Location = new Point(15, 239);
+            userLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            userLabel.Location = new Point(9, 239);
             userLabel.Margin = new Padding(0);
             userLabel.Name = "userLabel";
-            userLabel.Size = new Size(126, 21);
+            userLabel.Size = new Size(88, 17);
             userLabel.TabIndex = 6;
             userLabel.Text = "Update Users";
             userLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // cleanProgress
             // 
-            cleanProgress.Location = new Point(15, 330);
+            cleanProgress.Location = new Point(12, 326);
             cleanProgress.Name = "cleanProgress";
             cleanProgress.Size = new Size(773, 23);
             cleanProgress.TabIndex = 9;
@@ -131,20 +137,62 @@
             // servicesLabel
             // 
             servicesLabel.AutoSize = true;
-            servicesLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            servicesLabel.Location = new Point(15, 306);
+            servicesLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            servicesLabel.Location = new Point(9, 306);
             servicesLabel.Margin = new Padding(0);
             servicesLabel.Name = "servicesLabel";
-            servicesLabel.Size = new Size(126, 21);
+            servicesLabel.Size = new Size(163, 17);
             servicesLabel.TabIndex = 8;
             servicesLabel.Text = "Remove Radianse Services";
             servicesLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // startButton
+            // 
+            startButton.Location = new Point(610, 371);
+            startButton.Name = "startButton";
+            startButton.Size = new Size(143, 68);
+            startButton.TabIndex = 10;
+            startButton.Text = "Start Migration";
+            startButton.UseVisualStyleBackColor = true;
+            // 
+            // stopButton
+            // 
+            stopButton.Location = new Point(610, 462);
+            stopButton.Name = "stopButton";
+            stopButton.Size = new Size(143, 68);
+            stopButton.TabIndex = 11;
+            stopButton.Text = "Exit";
+            stopButton.UseVisualStyleBackColor = true;
+            // 
+            // outputBox
+            // 
+            outputBox.Location = new Point(15, 371);
+            outputBox.Multiline = true;
+            outputBox.Name = "outputBox";
+            outputBox.ReadOnly = true;
+            outputBox.ScrollBars = ScrollBars.Vertical;
+            outputBox.Size = new Size(537, 159);
+            outputBox.TabIndex = 12;
+            outputBox.WordWrap = false;
+            // 
+            // pictureBox1
+            // 
+            pictureBox1.Image = (Image)resources.GetObject("pictureBox1.Image");
+            pictureBox1.Location = new Point(658, 9);
+            pictureBox1.Name = "pictureBox1";
+            pictureBox1.Size = new Size(139, 32);
+            pictureBox1.TabIndex = 13;
+            pictureBox1.TabStop = false;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(809, 542);
+            Controls.Add(pictureBox1);
+            Controls.Add(outputBox);
+            Controls.Add(stopButton);
+            Controls.Add(startButton);
             Controls.Add(cleanProgress);
             Controls.Add(servicesLabel);
             Controls.Add(userProgress);
@@ -157,6 +205,7 @@
             Controls.Add(titleText);
             Name = "MainForm";
             Text = "Radianse Migration Tool";
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -173,5 +222,9 @@
         private Label userLabel;
         private ProgressBar cleanProgress;
         private Label servicesLabel;
+        private Button startButton;
+        private Button stopButton;
+        private TextBox outputBox;
+        private PictureBox pictureBox1;
     }
 }
