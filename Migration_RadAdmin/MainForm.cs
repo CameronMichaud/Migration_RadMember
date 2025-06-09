@@ -115,7 +115,13 @@ namespace Migration_RadAdmin
                 while (!process.StandardOutput.EndOfStream)
                 {
                     string line = process.StandardOutput.ReadLine();
-                    outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + "\n")));
+                    if (line.Contains("Successfully installed"))
+                    {
+                        outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + Environment.NewLine)));
+                    } else if (line.Contains("No available upgrade"))
+                    {
+                        outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText("Already installed." + Environment.NewLine)));
+                    }
                 }
 
                 process?.WaitForExit();
@@ -163,7 +169,7 @@ namespace Migration_RadAdmin
             }
             catch (Exception ex)
             {
-                Log($"Error: {ex.Message}.");
+                Log($"Error: {ex.Message}Likely user {userName} does not exist.");
             }
         }
 
@@ -222,6 +228,10 @@ namespace Migration_RadAdmin
                 Log($"Removing directory: {path}");
                 Directory.Delete(path, true);
             }
+            else
+            {
+                Log($"Directory not found: {path}");
+            }
         }
 
         private void Log(string msg)
@@ -273,6 +283,7 @@ namespace Migration_RadAdmin
 
         private void InstallServices(string installFile)
         {
+            Log($"===Installing Skyview Services===");
             statusText.Invoke((MethodInvoker)(() => statusText.Text = "Installing Skyview Services..."));
             statusText.Invoke((MethodInvoker)(() => servicesLabel.Text = "Installing Skyview Services"));
 
