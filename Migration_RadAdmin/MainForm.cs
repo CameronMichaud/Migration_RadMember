@@ -44,6 +44,7 @@ namespace Migration_RadAdmin
                 {
                     Log("Installing .NET 6 SDK via winget");
                     RunTerminal("powershell.exe", "winget install Microsoft.DotNet.SDK.6 --accept-source-agreements -h");
+                    dotnetProgress.Invoke((MethodInvoker)(() => dotnetProgress.Value = 50));
                     Log("\nInstalling .NET 8 SDK via winget");
                     RunTerminal("powershell.exe", "winget install Microsoft.DotNet.SDK.8 --accept-source-agreements -h");
                 });
@@ -58,13 +59,16 @@ namespace Migration_RadAdmin
                 {
                     string currentUser = Environment.UserName;
                     DeleteUser("Kiosk");
+                    userProgress.Invoke((MethodInvoker)(() => userProgress.Value = 50));
                     RenameUser(currentUser, "Radianse");
+                    userProgress.Invoke((MethodInvoker)(() => userProgress.Value = 75));
                     SetUserPassword("Radianse");
                 });
 
                 await RunFunction("Removing Local Services", cleanProgress, () =>
                 {
                     RemoveServices(cleanProgress);
+                    cleanProgress.Invoke((MethodInvoker)(() => cleanProgress.Value = 50));
                     InstallServices("skyview-services-3.0.367.msi");
                 });
 
@@ -274,6 +278,7 @@ namespace Migration_RadAdmin
 
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string installPath = Path.Combine(desktopPath, installFile);
+            string migrationInstallPath = Path.Combine(desktopPath, "migration", installFile);
 
             ProcessStartInfo funcInfo = new ProcessStartInfo
             {
@@ -288,9 +293,12 @@ namespace Migration_RadAdmin
                 var process = Process.Start(funcInfo);
                 process?.WaitForExit();
             }
-            else
+            else if (File.Exists(migrationInstallPath))
             {
-                Log($"No services found at: {installPath}");
+                Log($"Installing Skyview services found at: {migrationInstallPath}");
+            }
+            {
+                Log($"No services found at: {installPath} || {migrationInstallPath}");
             }
         }
 

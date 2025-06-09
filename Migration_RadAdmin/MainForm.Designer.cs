@@ -203,8 +203,10 @@
             Controls.Add(dotnetLabel);
             Controls.Add(statusText);
             Controls.Add(titleText);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "MainForm";
             Text = "Radianse Migration Tool";
+            TopMost = true;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
             PerformLayout();
