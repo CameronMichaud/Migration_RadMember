@@ -43,10 +43,10 @@ namespace Migration_RadAdmin
                 await RunFunction("Installing .NET SDKs", dotnetProgress, () =>
                 {
                     Log("Installing .NET 6 SDK via winget");
-                    RunTerminal("powershell.exe", "winget install Microsoft.DotNet.SDK.6 --accept-source-agreements -h");
+                    RunTerminal("powershell.exe", "winget install Microsoft.DotNet.SDK.6 --accept-package-agreements --accept-source-agreements -h");
                     dotnetProgress.Invoke((MethodInvoker)(() => dotnetProgress.Value = 50));
                     Log("\nInstalling .NET 8 SDK via winget");
-                    RunTerminal("powershell.exe", "winget install Microsoft.DotNet.SDK.8 --accept-source-agreements -h");
+                    RunTerminal("powershell.exe", "winget install Microsoft.DotNet.SDK.8 --accept-package-agreements --accept-source-agreements -h");
                 });
 
                 await RunFunction("Installing Chrome", chromeProgress, () =>
