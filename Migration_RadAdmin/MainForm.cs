@@ -245,11 +245,13 @@ namespace Migration_RadAdmin
         {
             try
             {
-                bool user = RunReturn("powershell.exe", $"Get-LocalUser -Name '{userName}'");
+                DirectoryEntry localMachine = new DirectoryEntry("WinNT://" + Environment.MachineName);
+                DirectoryEntry user = localMachine.Children.Find(userName);
 
-                if (user)
+                if (user != null)
                 {
-                    RunTerminal("powershell.exe", $"Set-LocalUser -Name ${userName} -Password ([securestring[::new())");
+                    user.Invoke("SetPassword", new object[] { "" });
+                    user.CommitChanges();
                     Log($"Password for '{userName}' was removed successfully.");
                 }
                 else
