@@ -167,12 +167,6 @@ namespace Migration_RadAdmin
 
         private void ConfigureChrome()
         {
-            // Start shell:startup for chrome shortcut
-            Process.Start("explorer.exe", "shell:startup");
-
-            UpsertStartup();
-
-
             // Start Chrome if it exists and open to skyview admin page
             string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
             if (File.Exists(chromePath))
@@ -183,6 +177,9 @@ namespace Migration_RadAdmin
             {
                 Log($"Chrome not found at directory: {chromePath}.");
             }
+
+            // Start shell:startup for chrome shortcut
+            Process.Start("explorer.exe", "shell:startup");
         }
 
         private void UpsertStartup()
