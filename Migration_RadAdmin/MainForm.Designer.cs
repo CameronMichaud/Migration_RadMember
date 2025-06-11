@@ -35,10 +35,10 @@
             dotnetProgress = new ProgressBar();
             chromeProgress = new ProgressBar();
             chromeLabel = new Label();
-            userProgress = new ProgressBar();
-            userLabel = new Label();
             cleanProgress = new ProgressBar();
             servicesLabel = new Label();
+            userProgress = new ProgressBar();
+            userLabel = new Label();
             startButton = new Button();
             stopButton = new Button();
             outputBox = new TextBox();
@@ -108,43 +108,43 @@
             chromeLabel.Text = "Install Chrome";
             chromeLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
-            // userProgress
-            // 
-            userProgress.Location = new Point(12, 259);
-            userProgress.Name = "userProgress";
-            userProgress.Size = new Size(773, 23);
-            userProgress.TabIndex = 7;
-            // 
-            // userLabel
-            // 
-            userLabel.AutoSize = true;
-            userLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            userLabel.Location = new Point(9, 239);
-            userLabel.Margin = new Padding(0);
-            userLabel.Name = "userLabel";
-            userLabel.Size = new Size(88, 17);
-            userLabel.TabIndex = 6;
-            userLabel.Text = "Update Users";
-            userLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
             // cleanProgress
             // 
-            cleanProgress.Location = new Point(12, 326);
+            cleanProgress.Location = new Point(12, 259);
             cleanProgress.Name = "cleanProgress";
             cleanProgress.Size = new Size(773, 23);
-            cleanProgress.TabIndex = 9;
+            cleanProgress.TabIndex = 7;
             // 
             // servicesLabel
             // 
             servicesLabel.AutoSize = true;
             servicesLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            servicesLabel.Location = new Point(9, 306);
+            servicesLabel.Location = new Point(9, 239);
             servicesLabel.Margin = new Padding(0);
             servicesLabel.Name = "servicesLabel";
             servicesLabel.Size = new Size(163, 17);
-            servicesLabel.TabIndex = 8;
+            servicesLabel.TabIndex = 6;
             servicesLabel.Text = "Remove Radianse Services";
             servicesLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // userProgress
+            // 
+            userProgress.Location = new Point(12, 326);
+            userProgress.Name = "userProgress";
+            userProgress.Size = new Size(773, 23);
+            userProgress.TabIndex = 9;
+            // 
+            // userLabel
+            // 
+            userLabel.AutoSize = true;
+            userLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            userLabel.Location = new Point(9, 306);
+            userLabel.Margin = new Padding(0);
+            userLabel.Name = "userLabel";
+            userLabel.Size = new Size(88, 17);
+            userLabel.TabIndex = 8;
+            userLabel.Text = "Update Users";
+            userLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // startButton
             // 
@@ -193,10 +193,10 @@
             Controls.Add(outputBox);
             Controls.Add(stopButton);
             Controls.Add(startButton);
-            Controls.Add(cleanProgress);
-            Controls.Add(servicesLabel);
             Controls.Add(userProgress);
             Controls.Add(userLabel);
+            Controls.Add(cleanProgress);
+            Controls.Add(servicesLabel);
             Controls.Add(chromeProgress);
             Controls.Add(chromeLabel);
             Controls.Add(dotnetProgress);
@@ -220,10 +220,10 @@
         private ProgressBar dotnetProgress;
         private ProgressBar chromeProgress;
         private Label chromeLabel;
-        private ProgressBar userProgress;
-        private Label userLabel;
         private ProgressBar cleanProgress;
         private Label servicesLabel;
+        private ProgressBar userProgress;
+        private Label userLabel;
         private Button startButton;
         private Button stopButton;
         private TextBox outputBox;

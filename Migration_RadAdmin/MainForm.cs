@@ -59,10 +59,10 @@ namespace Migration_RadAdmin
                     RunTerminal("powershell", "winget install Google.Chrome --accept-package-agreements --accept-source-agreements -h");
                 });
 
-                await RunFunction("Removing Local Services", userProgress, () =>
+                await RunFunction("Removing Local Services", cleanProgress, () =>
                 {
-                    RemoveAll(userProgress);
-                    setProgress(userProgress, 50);
+                    RemoveAll(cleanProgress);
+                    setProgress(cleanProgress, 50);
                     InstallServices("skyview-services-3.0.367.msi");
                 });
 
@@ -72,13 +72,13 @@ namespace Migration_RadAdmin
 
                 MessageBox.Show("Please install Radainse as an app.\nThen hit 'OK'", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                await RunFunction("Updating Users", cleanProgress, () =>
+                await RunFunction("Updating Users", userProgress, () =>
                 {
                     string currentUser = Environment.UserName;
                     DeleteUser("Kiosk");
-                    setProgress(cleanProgress, 50);
+                    setProgress(userProgress, 50);
                     RenameUser(currentUser, "Radianse");
-                    setProgress(cleanProgress, 75);
+                    setProgress(userProgress, 75);
                     RemoveUserPassword("Radianse");
                 });
 
@@ -167,6 +167,9 @@ namespace Migration_RadAdmin
 
         private void ConfigureChrome()
         {
+            // Start shell:startup for chrome shortcut
+            Process.Start("explorer.exe", "shell:startup");
+
             // Start Chrome if it exists and open to skyview admin page
             string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
             if (File.Exists(chromePath))
@@ -177,9 +180,6 @@ namespace Migration_RadAdmin
             {
                 Log($"Chrome not found at directory: {chromePath}.");
             }
-
-            // Start shell:startup for chrome shortcut
-            Process.Start("explorer.exe", "shell:startup");
         }
 
         private void UpsertStartup()
@@ -436,7 +436,7 @@ namespace Migration_RadAdmin
         {
             Log($"===Installing Skyview Services===");
             setStatus("Installing Skyview Services...");
-            statusText.Invoke((MethodInvoker)(() => userLabel.Text = "Installing Skyview Services"));
+            statusText.Invoke((MethodInvoker)(() => servicesLabel.Text = "Installing Skyview Services"));
 
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string installPath = Path.Combine(desktopPath, installFile);
