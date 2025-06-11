@@ -59,28 +59,32 @@ namespace Migration_RadAdmin
                     RunTerminal("powershell", "winget install Google.Chrome --accept-package-agreements --accept-source-agreements -h");
                 });
 
-                await RunFunction("Updating Users", userProgress, () =>
+                await RunFunction("Removing Local Services", userProgress, () =>
                 {
-                    string currentUser = Environment.UserName;
-                    DeleteUser("Kiosk");
+                    RemoveAll(userProgress);
                     setProgress(userProgress, 50);
-                    RenameUser(currentUser, "Radianse");
-                    setProgress(userProgress, 75);
-                    RemoveUserPassword("Radianse");
-                });
-
-                await RunFunction("Removing Local Services", cleanProgress, () =>
-                {
-                    RemoveAll(cleanProgress);
-                    setProgress(cleanProgress, 50);
                     InstallServices("skyview-services-3.0.367.msi");
                 });
 
-                MessageBox.Show("Migration completed successfully.\nPlease log out and log back in.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                setStatus("Manual Action Required. (Install Radianse.io as app)");
+
+                ConfigureChrome();  // Open radianse.io, run shell:startup
+
+                MessageBox.Show("Please install Radainse as an app.\nThen hit 'OK'", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                await RunFunction("Updating Users", cleanProgress, () =>
+                {
+                    string currentUser = Environment.UserName;
+                    DeleteUser("Kiosk");
+                    setProgress(cleanProgress, 50);
+                    RenameUser(currentUser, "Radianse");
+                    setProgress(cleanProgress, 75);
+                    RemoveUserPassword("Radianse");
+                });
 
                 setStatus("Migration Complete!");
 
-                ConfigureChrome();  // Open radianse.io, run shell:startup
+                MessageBox.Show("Migration completed successfully.\nPlease log out and log back in or restart your computer.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             });
         }
@@ -94,7 +98,7 @@ namespace Migration_RadAdmin
         {
             setStatus($"{title}...");
             Log($"==={title}===");
-            setProgress(bar,  25);
+            setProgress(bar, 25);
 
             action();
             setProgress(bar, 100);
@@ -138,18 +142,18 @@ namespace Migration_RadAdmin
                     {
                         // Print full line (usually for SC, should be small)
                         outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + Environment.NewLine)));
-                    } 
-                    else if (line.Contains("No available upgrade"))
-                    {
-                        // Up to date .NET, print "Already Installed"
-                        outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText("Already installed." + Environment.NewLine)));
                     }
-                    else if (line.Contains("Successfully installed"))
-                    {
-                        // Don't use log to keep output under the SDK log
-                        // Prints "Successfully Installed"
-                        outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + Environment.NewLine)));
-                    }
+                    //else if (line.Contains("No available upgrade"))
+                    //{
+                    //    // Up to date .NET, print "Already Installed"
+                    //    outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText("Already installed." + Environment.NewLine)));
+                    //}
+                    //else if (line.Contains("Successfully installed"))
+                    //{
+                    //    // Don't use log to keep output under the SDK log
+                    //    // Prints "Successfully Installed"
+                    outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + Environment.NewLine)));
+                    //}
                 }
 
                 // After executing function, then return to main stream
@@ -164,9 +168,27 @@ namespace Migration_RadAdmin
         private void ConfigureChrome()
         {
             // Start shell:startup for chrome shortcut
-            // Process.Start("explorer.exe", "shell:startup");
+            Process.Start("explorer.exe", "shell:startup");
 
-            string userStartupPath = @"C:\Users\cam\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup";
+            UpsertStartup();
+
+
+            // Start Chrome if it exists and open to skyview admin page
+            string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
+            if (File.Exists(chromePath))
+            {
+                Process.Start(chromePath, "radianse.io");
+            }
+            else
+            {
+                Log($"Chrome not found at directory: {chromePath}.");
+            }
+        }
+
+        private void UpsertStartup()
+        {
+            string currentUser = Environment.UserName;
+            string userStartupPath = @$"C:\Users\{currentUser}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup";
             string allUsersStartupPath = @"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup";
             try
             {
@@ -182,18 +204,6 @@ namespace Migration_RadAdmin
             catch (Exception e)
             {
                 Log($"Error with opening startup folder: {e}");
-            }
-
-
-            // Start Chrome if it exists and open to skyview admin page
-            string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
-            if (File.Exists(chromePath))
-            {
-                Process.Start(chromePath, "radianse.io");
-            }
-            else
-            {
-                Log($"Chrome not found at directory: {chromePath}.");
             }
         }
 
@@ -227,7 +237,7 @@ namespace Migration_RadAdmin
 
                 if (user)
                 {
-                    RunTerminal("powershell.exe", $"Rename-LocalUser -Name {oldName} -NewName {newName}");
+                    RunTerminal("powershell.exe", $"Set-LocalUser -Name {oldName} -FullName {newName}");
                     Log($"User '{oldName}' renamed successfully to '{newName}'.");
                 }
                 else
@@ -335,7 +345,7 @@ namespace Migration_RadAdmin
             RemoveDirectory("C:\\Program Files (x86)\\Radianse");
             RemoveDirectory("C:\\Program Files (x86)\\AirPointe");
 
-            setProgress(bar,  75);
+            setProgress(bar, 75);
         }
 
         private void RemovePrograms(string[] keywords, ProgressBar bar)
@@ -372,10 +382,10 @@ namespace Migration_RadAdmin
         private void RemoveServices(string[] keywords, string[] literals, ProgressBar bar)
         {
             try
-            { 
+            {
                 List<string> validServices = new List<string>();
 
-                foreach(string service in keywords)
+                foreach (string service in keywords)
                 {
                     ProcessStartInfo funcInfo = new ProcessStartInfo()
                     {
@@ -394,10 +404,10 @@ namespace Migration_RadAdmin
                     string output = process.StandardOutput.ReadToEnd();
 
                     // If there's a name, save it
-                    if (!string.IsNullOrEmpty(output) && !string.IsNullOrWhiteSpace(output)) 
-                    { 
-                        Log($"Valid service found: {output}"); 
-                        validServices.Add(output.Trim()); 
+                    if (!string.IsNullOrEmpty(output) && !string.IsNullOrWhiteSpace(output))
+                    {
+                        Log($"Valid service found: {output}");
+                        validServices.Add(output.Trim());
                     }
                 }
                 // Process all literal services
@@ -408,17 +418,17 @@ namespace Migration_RadAdmin
                         Log($"Valid service found: {service}");
                         validServices.Add(service);
                     }
-                    
+
                 }
                 // Stop/Delete all services
                 foreach (string service in validServices)
                 {
-                    RunTerminal("sc.exe", $"stop \"{service}\""); 
+                    RunTerminal("sc.exe", $"stop \"{service}\"");
                     RunTerminal("sc.exe", $"delete \"{service}\"");
                     Log($"Removed: {service}");
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Log($"Error removing services: {e.Message}");
             }
@@ -429,7 +439,7 @@ namespace Migration_RadAdmin
         {
             Log($"===Installing Skyview Services===");
             setStatus("Installing Skyview Services...");
-            statusText.Invoke((MethodInvoker)(() => servicesLabel.Text = "Installing Skyview Services"));
+            statusText.Invoke((MethodInvoker)(() => userLabel.Text = "Installing Skyview Services"));
 
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string installPath = Path.Combine(desktopPath, installFile);
@@ -451,7 +461,7 @@ namespace Migration_RadAdmin
             else if (File.Exists(migrationInstallPath))
             {
                 Log($"Installing Skyview services found at: {migrationInstallPath}");
-            } 
+            }
             else
             {
                 Log($"No services found at: {installPath} || {migrationInstallPath}");
