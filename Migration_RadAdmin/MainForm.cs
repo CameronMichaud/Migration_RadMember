@@ -81,13 +81,16 @@ namespace Migration_RadAdmin
                 await RunFunction("Installing Chrome", chromeProgress, () =>
                 {
                     bool chrome = ChromeInstalled();
-                    if (!chrome)
+                    bool winget = WingetInstalled();
+                    if (!chrome && winget)
                     {
-                        Log("Downloading via curl Chrome (this may take a few minutes)");
-                        RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\chromeSetup.exe https://dl.google.com/chrome/install/ChromeStandaloneSetup64.exe");
-                        Log("Installing Chrome (this may take a few mintues)");
-                        RunTerminal("cmd.exe", $@"/c start C:\\users\{currentUser}\desktop\chromeSetup.exe /quiet");
-                        Log("Chrome install finished.\n");
+                        Log("Installing Chrome via winget (this may take a few minutes)");
+                        RunTerminal("powershell.exe", "winget install Google.Chrome --silent --accept-source-agreements --accept-package-agreements");
+                    }
+                    else if (!chrome && !winget)
+                    {
+                        Log("===MANUAL ACTION REQURED===`nPlease download and install chrome.");
+                        RunTerminal("cmd.exe", $@"/c start firefox https://www.google.com/chrome/");
                     }
                     else
                     {
@@ -215,6 +218,32 @@ namespace Migration_RadAdmin
             catch
             {
                 Log($".NET version {version} not found");
+                return false;
+            }
+        }
+
+        private bool WingetInstalled()
+        {
+            try
+            {
+                ProcessStartInfo funcInfo = new ProcessStartInfo
+                {
+                    FileName = "winget",
+                    Arguments = "--version",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                Process process = Process.Start(funcInfo);
+
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+
+                return (!string.IsNullOrWhiteSpace(output) && !string.IsNullOrEmpty(output));
+            }
+            catch
+            {
                 return false;
             }
         }
