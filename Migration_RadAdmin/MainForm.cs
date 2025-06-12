@@ -47,24 +47,40 @@ namespace Migration_RadAdmin
             {
                 await RunFunction("Installing .NET SDKs", dotnetProgress, () =>
                 {
-                    Log("Dowloading via curl .NET 6 (this may take a few minutes");
-                    RunTerminal("powershell.exe", "curl -o dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
-                    Log("Installing .NET 6 (this may take a few minutes)");
-                    RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\dotnet6.exe /quiet");
+                    bool dotnet6 = DotNetInstalled("6");
+                    if (!dotnet6)
+                    {
+                        Log("Dowloading via curl .NET 6 (this may take a few minutes");
+                        RunTerminal("powershell.exe", "curl -o dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
+                        Log("Installing .NET 6 (this may take a few minutes)");
+                        RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\dotnet6.exe /quiet");
+                    }
+                    else
+                    {
+                        Log(".NET 8 already installed");
+                    }
 
-                    setProgress(dotnetProgress, 50);
+                        setProgress(dotnetProgress, 50);
 
-                    Log("Dowloading via curl .NET 8 (this may take a few minutes");
-                    RunTerminal("powershell.exe", "curl -o dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
-                    Log("Installing .NET 8 (this may take a few minutes)");
-                    RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\dotnet8.exe /quiet");
-                    
+                    bool dotnet8 = DotNetInstalled("8");
+                    if (!dotnet8)
+                    {
+                        Log("Dowloading via curl .NET 8 (this may take a few minutes");
+                        RunTerminal("powershell.exe", "curl -o dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
+                        Log("Installing .NET 8 (this may take a few minutes)");
+                        RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\dotnet8.exe /quiet");
+                    }
+                    else
+                    {
+                        Log(".NET 8 already installed");
+                    }
                 });
 
                 await RunFunction("Installing Chrome", chromeProgress, () =>
                 {
-                    Log("Installing Chrome SDK via winget");
+                    Log("Downloading via curl Chrome (this may take a few minutes)");
                     RunTerminal("powershell.exe", "curl -o chromeSetup.exe https://dl.google.com/chrome/install/ChromeStandaloneSetup64.exe");
+                    Log("Installing Chrome (this may take a few mintues)");
                     RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\chromeSetup.exe /quiet");
                 });
 
