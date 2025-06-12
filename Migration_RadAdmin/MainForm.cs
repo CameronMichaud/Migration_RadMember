@@ -51,13 +51,13 @@ namespace Migration_RadAdmin
                     if (!dotnet6)
                     {
                         Log("Dowloading via curl .NET 6 (this may take a few minutes");
-                        RunTerminal("powershell.exe", "curl -o dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
+                        RunTerminal("cmd.exe", "curl -o dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
                         Log("Installing .NET 6 (this may take a few minutes)");
                         RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\dotnet6.exe /quiet");
                     }
                     else
                     {
-                        Log(".NET 8 already installed");
+                        Log(".NET 6 already installed");
                     }
 
                         setProgress(dotnetProgress, 50);
@@ -66,7 +66,7 @@ namespace Migration_RadAdmin
                     if (!dotnet8)
                     {
                         Log("Dowloading via curl .NET 8 (this may take a few minutes");
-                        RunTerminal("powershell.exe", "curl -o dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
+                        RunTerminal("cmd.exe", "curl -o dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
                         Log("Installing .NET 8 (this may take a few minutes)");
                         RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\dotnet8.exe /quiet");
                     }
@@ -82,7 +82,7 @@ namespace Migration_RadAdmin
                     if (!chrome)
                     {
                         Log("Downloading via curl Chrome (this may take a few minutes)");
-                        RunTerminal("powershell.exe", "curl -o chromeSetup.exe https://dl.google.com/chrome/install/ChromeStandaloneSetup64.exe");
+                        RunTerminal("cmd.exe", "curl -o chromeSetup.exe https://dl.google.com/chrome/install/ChromeStandaloneSetup64.exe");
                         Log("Installing Chrome (this may take a few mintues)");
                         RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\chromeSetup.exe /quiet");
                     }
@@ -235,7 +235,7 @@ namespace Migration_RadAdmin
                 string output = process.StandardOutput.ReadToEnd();
                 process.WaitForExit();
 
-                return !string.IsNullOrWhiteSpace(output);
+                return !string.IsNullOrWhiteSpace(output) && !string.IsNullOrEmpty(output);
             }
             catch
             {
