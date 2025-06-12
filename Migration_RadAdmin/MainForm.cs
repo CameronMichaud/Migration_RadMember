@@ -50,10 +50,11 @@ namespace Migration_RadAdmin
                     bool dotnet6 = DotNetInstalled("6");
                     if (!dotnet6)
                     {
-                        Log("Dowloading via curl .NET 6 (this may take a few minutes");
-                        RunTerminal("cmd.exe", "curl -o dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
+                        Log("Dowloading via curl .NET 6 (this may take a few minutes)");
+                        RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
                         Log("Installing .NET 6 (this may take a few minutes)");
-                        RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\dotnet6.exe /quiet");
+                        RunTerminal("cmd.exe", $@"/c start C:\\users\{currentUser}\desktop\dotnet6.exe /quiet");
+                        Log(".NET 6 install finished.\n");
                     }
                     else
                     {
@@ -65,10 +66,11 @@ namespace Migration_RadAdmin
                     bool dotnet8 = DotNetInstalled("8");
                     if (!dotnet8)
                     {
-                        Log("Dowloading via curl .NET 8 (this may take a few minutes");
-                        RunTerminal("cmd.exe", "curl -o dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
+                        Log("Dowloading via curl .NET 8 (this may take a few minutes)");
+                        RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
                         Log("Installing .NET 8 (this may take a few minutes)");
-                        RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\dotnet8.exe /quiet");
+                        RunTerminal("cmd.exe", $@"/c C:\\users\{currentUser}\desktop\dotnet8.exe /quiet");
+                        Log(".NET 8 install finished.\n");
                     }
                     else
                     {
@@ -82,9 +84,10 @@ namespace Migration_RadAdmin
                     if (!chrome)
                     {
                         Log("Downloading via curl Chrome (this may take a few minutes)");
-                        RunTerminal("cmd.exe", "curl -o chromeSetup.exe https://dl.google.com/chrome/install/ChromeStandaloneSetup64.exe");
+                        RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\chromeSetup.exe https://dl.google.com/chrome/install/ChromeStandaloneSetup64.exe");
                         Log("Installing Chrome (this may take a few mintues)");
-                        RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\chromeSetup.exe /quiet");
+                        RunTerminal("cmd.exe", $@"/c start C:\\users\{currentUser}\desktop\chromeSetup.exe /quiet");
+                        Log("Chrome install finished.\n");
                     }
                     else
                     {
@@ -165,7 +168,6 @@ namespace Migration_RadAdmin
                 // Start the program/args
                 var process = Process.Start(funcInfo);
 
-
                 // While there's still output, read line
                 while (!process.StandardOutput.EndOfStream)
                 {
@@ -235,7 +237,7 @@ namespace Migration_RadAdmin
                 string output = process.StandardOutput.ReadToEnd();
                 process.WaitForExit();
 
-                return !string.IsNullOrWhiteSpace(output) && !string.IsNullOrEmpty(output);
+                return (!string.IsNullOrWhiteSpace(output) && !string.IsNullOrEmpty(output));
             }
             catch
             {
@@ -246,7 +248,7 @@ namespace Migration_RadAdmin
         private void ConfigureChrome()
         {
             // Start shell:startup for chrome shortcut
-            Process.Start("explorer.exe", "shell:startup");
+            Process.Start("explorer.exe", "shell:startup").WaitForExit();
 
             // Start Chrome if it exists and open to skyview admin page
             string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
@@ -519,6 +521,8 @@ namespace Migration_RadAdmin
             else if (File.Exists(migrationInstallPath))
             {
                 Log($"Installing Skyview services found at: {migrationInstallPath}");
+                var process = Process.Start(funcInfo);
+                process?.WaitForExit();
             }
             else
             {
