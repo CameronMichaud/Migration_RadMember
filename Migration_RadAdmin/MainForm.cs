@@ -78,10 +78,18 @@ namespace Migration_RadAdmin
 
                 await RunFunction("Installing Chrome", chromeProgress, () =>
                 {
-                    Log("Downloading via curl Chrome (this may take a few minutes)");
-                    RunTerminal("powershell.exe", "curl -o chromeSetup.exe https://dl.google.com/chrome/install/ChromeStandaloneSetup64.exe");
-                    Log("Installing Chrome (this may take a few mintues)");
-                    RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\chromeSetup.exe /quiet");
+                    bool chrome = ChromeInstalled();
+                    if (!chrome)
+                    {
+                        Log("Downloading via curl Chrome (this may take a few minutes)");
+                        RunTerminal("powershell.exe", "curl -o chromeSetup.exe https://dl.google.com/chrome/install/ChromeStandaloneSetup64.exe");
+                        Log("Installing Chrome (this may take a few mintues)");
+                        RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\chromeSetup.exe /quiet");
+                    }
+                    else
+                    {
+                        Log("Chrome already installed");
+                    }
                 });
 
                 await RunFunction("Removing Local Services", cleanProgress, () =>
@@ -214,6 +222,32 @@ namespace Migration_RadAdmin
             catch
             {
                 Log($".NET version {version} not found");
+                return false;
+            }
+        }
+
+        private bool ChromeInstalled()
+        {
+            try
+            {
+                ProcessStartInfo funcInfo = new ProcessStartInfo
+                {
+                    FileName = "chrome",
+                    Arguments = "--version",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                Process process = Process.Start(funcInfo);
+
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+
+                return !string.IsNullOrWhiteSpace(output);
+            }
+            catch
+            {
                 return false;
             }
         }
