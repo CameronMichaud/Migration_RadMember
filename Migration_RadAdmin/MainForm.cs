@@ -29,8 +29,8 @@ namespace Migration_RadAdmin
                     Verb = "runas"
                 };
 
-                Process.Start(funcInfo);    // Start admin shell
-                Environment.Exit(0);        // Exit old shell
+                Process.Start(funcInfo);    // Start this program as admin
+                Environment.Exit(0);        // Close old instance
             }
 
             // Buttons won't work without this, I'm unsure why
@@ -41,22 +41,31 @@ namespace Migration_RadAdmin
         private async void startButton_Click(object sender, EventArgs e)
         {
             startButton.Enabled = false;    // Grey out start migration during execution
+            string currentUser = Environment.UserName;
 
             await Task.Run(async () =>
             {
                 await RunFunction("Installing .NET SDKs", dotnetProgress, () =>
                 {
-                    Log("Installing .NET 6 SDK via winget");
-                    RunTerminal("powershell.exe", "winget install Microsoft.DotNet.SDK.6 --accept-package-agreements --accept-source-agreements -h");
+                    Log("Dowloading via curl .NET 6 (this may take a few minutes");
+                    RunTerminal("powershell.exe", "curl -o dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
+                    Log("Installing .NET 6 (this may take a few minutes)");
+                    RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\dotnet6.exe /quiet");
+
                     setProgress(dotnetProgress, 50);
-                    Log("Installing .NET 8 SDK via winget");
-                    RunTerminal("powershell.exe", "winget install Microsoft.DotNet.SDK.8 --accept-package-agreements --accept-source-agreements -h");
+
+                    Log("Dowloading via curl .NET 8 (this may take a few minutes");
+                    RunTerminal("powershell.exe", "curl -o dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
+                    Log("Installing .NET 8 (this may take a few minutes)");
+                    RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\dotnet8.exe /quiet");
+                    
                 });
 
                 await RunFunction("Installing Chrome", chromeProgress, () =>
                 {
                     Log("Installing Chrome SDK via winget");
-                    RunTerminal("powershell", "winget install Google.Chrome --accept-package-agreements --accept-source-agreements -h");
+                    RunTerminal("powershell.exe", "curl -o chromeSetup.exe https://dl.google.com/chrome/install/ChromeStandaloneSetup64.exe");
+                    RunTerminal("powershell.exe", $@"C:\\users\{currentUser}\chromeSetup.exe /quiet");
                 });
 
                 await RunFunction("Removing Local Services", cleanProgress, () =>
@@ -74,7 +83,6 @@ namespace Migration_RadAdmin
 
                 await RunFunction("Updating Users", userProgress, () =>
                 {
-                    string currentUser = Environment.UserName;
                     DeleteUser("Kiosk");
                     setProgress(userProgress, 50);
                     RenameUser(currentUser, "Radianse");
@@ -165,6 +173,35 @@ namespace Migration_RadAdmin
             }
         }
 
+        private bool DotNetInstalled(string version)
+        {
+            try
+            {
+                ProcessStartInfo funcInfo = new ProcessStartInfo
+                {
+                    FileName = "dotnet",
+                    Arguments = "--list-sdks",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                Process process = Process.Start(funcInfo);
+
+                // Get list of SDKs
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+
+                // Cut each line, see if it starts with the version requested, return true if so
+                return output.Split('\n').Any(line => line.Trim().StartsWith(version));
+            }
+            catch
+            {
+                Log($".NET version {version} not found");
+                return false;
+            }
+        }
+
         private void ConfigureChrome()
         {
             // Start shell:startup for chrome shortcut
@@ -179,28 +216,6 @@ namespace Migration_RadAdmin
             else
             {
                 Log($"Chrome not found at directory: {chromePath}.");
-            }
-        }
-
-        private void UpsertStartup()
-        {
-            string currentUser = Environment.UserName;
-            string userStartupPath = @$"C:\Users\{currentUser}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup";
-            string allUsersStartupPath = @"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup";
-            try
-            {
-                if (Directory.Exists(userStartupPath))
-                {
-                    Process.Start("explorer.exe", $@"{userStartupPath}");
-                }
-                else
-                {
-                    Process.Start("explorer.exe", $@"{allUsersStartupPath}");
-                }
-            }
-            catch (Exception e)
-            {
-                Log($"Error with opening startup folder: {e}");
             }
         }
 
