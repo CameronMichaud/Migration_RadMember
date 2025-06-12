@@ -175,17 +175,8 @@ namespace Migration_RadAdmin
                         // Print full line (usually for SC, should be small)
                         outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + Environment.NewLine)));
                     }
-                    //else if (line.Contains("No available upgrade"))
-                    //{
-                    //    // Up to date .NET, print "Already Installed"
-                    //    outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText("Already installed." + Environment.NewLine)));
-                    //}
-                    //else if (line.Contains("Successfully installed"))
-                    //{
-                    //    // Don't use log to keep output under the SDK log
-                    //    // Prints "Successfully Installed"
+
                     outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + Environment.NewLine)));
-                    //}
                 }
 
                 // After executing function, then return to main stream
@@ -431,7 +422,12 @@ namespace Migration_RadAdmin
                     if (subKey == null) continue;
 
                     string uninstallString = subKey.GetValue("QuietUninstallString")?.ToString() ?? subKey.GetValue("UninstallString")?.ToString();
-                    if (string.IsNullOrEmpty(uninstallString)) { Log($"No uninstall string found for {subKeyName}"); continue; }
+                    
+                    if (string.IsNullOrEmpty(uninstallString))
+                    {
+                        Log($"No uninstall string found for {subKeyName}");
+                        continue; 
+                    }
 
                     Log($"Uninstalling: {subKey.GetValue("DisplayName")?.ToString()}");
                     RunTerminal("cmd.exe", $"/c \"{uninstallString}\"");
@@ -452,7 +448,7 @@ namespace Migration_RadAdmin
                     ProcessStartInfo funcInfo = new ProcessStartInfo()
                     {
                         FileName = "powershell.exe",
-                        Arguments = "Get-Service | Where-Object { $_.Name -like " + $"'*{service}*'" + "}" + " | Select-Object -ExpandProperty Name",
+                        Arguments = "Get-Service | Where-Object { $_.Name -match " + $"'{service}'" + "}" + " | Select-Object -ExpandProperty Name",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         CreateNoWindow = true,
