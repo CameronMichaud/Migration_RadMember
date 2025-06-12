@@ -279,11 +279,17 @@ namespace Migration_RadAdmin
             // Start shell:startup for chrome shortcut
             Process.Start("explorer.exe", "shell:startup").WaitForExit();
 
+            bool chrome = ChromeInstalled();
+
             // Start Chrome if it exists and open to skyview admin page
             string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
             if (File.Exists(chromePath))
             {
                 Process.Start(chromePath, "radianse.io");
+            }
+            if (chrome)
+            {
+                RunTerminal("chrome.exe", "radianse.io");
             }
             else
             {
