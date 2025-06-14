@@ -1,3 +1,4 @@
+using Microsoft.VisualBasic.Logging;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,8 @@ namespace Migration_RadAdmin
 {
     public partial class MainForm : Form
     {
+        // Used to track progress of the migration when disabling the start button
+        private static int MigrationState = 0; // 0 = not started, 1 = chrome installed
         public MainForm()
         {
             InitializeComponent();
@@ -47,104 +50,119 @@ namespace Migration_RadAdmin
 
             await Task.Run(async () =>
             {
-                await RunFunction("Installing .NET SDKs", dotnetProgress, () =>
+                if (MigrationState == 0)
                 {
-                    bool dotnet6 = DotNetInstalled("6");
-                    if (!dotnet6)
+                    await RunFunction("Installing .NET SDKs", dotnetProgress, () =>
                     {
-                        Log("Dowloading via curl .NET 6 (this may take a few minutes)");
-                        RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
-                        Log("Installing .NET 6 (this may take a few minutes)");
-                        RunTerminal("cmd.exe", $@"/c start C:\\users\{currentUser}\desktop\dotnet6.exe /quiet");
-                        Log(".NET 6 install finished.\n");
-                    }
-                    else
-                    {
-                        Log(".NET 6 already installed");
-                    }
+                        bool dotnet6 = DotNetInstalled("6");
+                        if (!dotnet6)
+                        {
+                            Log("Dowloading via curl .NET 6 (this may take a few minutes)");
+                            RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
+                            Log("Installing .NET 6 (this may take a few minutes)");
+                            RunTerminal("cmd.exe", $@"/c start C:\\users\{currentUser}\desktop\dotnet6.exe /quiet");
+                            Log(".NET 6 install finished.\n");
+                        }
+                        else
+                        {
+                            Log(".NET 6 already installed");
+                        }
 
                         setProgress(dotnetProgress, 50);
 
-                    bool dotnet8 = DotNetInstalled("8");
-                    if (!dotnet8)
-                    {
-                        Log("Dowloading via curl .NET 8 (this may take a few minutes)");
-                        RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
-                        Log("Installing .NET 8 (this may take a few minutes)");
-                        RunTerminal("cmd.exe", $@"/c C:\\users\{currentUser}\desktop\dotnet8.exe /quiet");
-                        Log(".NET 8 install finished.\n");
-                    }
-                    else
-                    {
-                        Log(".NET 8 already installed");
-                    }
-                });
+                        bool dotnet8 = DotNetInstalled("8");
+                        if (!dotnet8)
+                        {
+                            Log("Dowloading via curl .NET 8 (this may take a few minutes)");
+                            RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
+                            Log("Installing .NET 8 (this may take a few minutes)");
+                            RunTerminal("cmd.exe", $@"/c C:\\users\{currentUser}\desktop\dotnet8.exe /quiet");
+                            Log(".NET 8 install finished.\n");
+                        }
+                        else
+                        {
+                            Log(".NET 8 already installed");
+                        }
+                    });
 
-                await RunFunction("Installing Chrome", chromeProgress, () =>
-                {
-                    bool chrome = IsInstalled("chrome.exe", "--version");
-                    bool winget = IsInstalled("winget.exe", "--version");
-                    bool choco = IsInstalled("choco.exe", "-?");
+                    await RunFunction("Installing Chrome", chromeProgress, () =>
+                    {
+                        bool chrome = IsInstalled("chrome.exe", "--version");
+                        bool winget = IsInstalled("winget.exe", "--version");
+                        bool choco = IsInstalled("choco.exe", "-?");
 
-                    if (!chrome && winget)
-                    {
-                        Log("Installing Chrome via winget (this may take a few minutes)");
-                        RunTerminal("powershell.exe", "winget install Google.Chrome --silent --accept-source-agreements --accept-package-agreements");
-                    }
-                    else if (!chrome && !winget && choco)
-                    {
-                        Log("Installing Chrome via chocolatey (this may take a few minutes)");
-                        RunTerminal("powershell.exe", "choco install googlechrome -y");
-                    }
-                    else if (!chrome && !winget && !choco)
-                    {
-                        // If there's no package manager installed, try to donwload chocolatey
-                        choco = InstallChocolatey();
-                        if (choco)
+                        if (!chrome && winget)
+                        {
+                            Log("Installing Chrome via winget (this may take a few minutes)");
+                            RunTerminal("powershell.exe", "winget install Google.Chrome --silent --accept-source-agreements --accept-package-agreements");
+                        }
+                        else if (!chrome && !winget && choco)
                         {
                             Log("Installing Chrome via chocolatey (this may take a few minutes)");
                             RunTerminal("powershell.exe", "choco install googlechrome -y");
                         }
-                        else 
+                        else if (!chrome && !winget && !choco)
                         {
-                            Log("No package manager installed; Chrome must be downloaded manually.");
-                            Log("===MANUAL ACTION REQURED===");
-                            Log("If you have Firefox installed, it will open the download page for Chrome.");
-                            RunTerminal("cmd.exe", $@"/c start firefox https://www.google.com/chrome/");
+                            // If there's no package manager installed, try to donwload chocolatey
+                            choco = InstallChocolatey();
+
+                            // Restart PowerShell to apply changes
+                            RestartPowershell();
+
+                            if (choco)
+                            {
+                                Log("Installing Chrome via chocolatey (this may take a few minutes)");
+                                RunTerminal("powershell.exe", "choco install googlechrome -y");
+                            }
+                            else
+                            {
+                                Log("No package manager installed; Chrome must be downloaded manually.");
+                                Log("===MANUAL ACTION REQURED===");
+                                Log("If you have Firefox installed, it will open the download page for Chrome.");
+                                RunTerminal("cmd.exe", $@"/c start firefox https://www.google.com/chrome/");
+                            }
                         }
-                    }
-                    else
+                        else
+                        {
+                            Log("Chrome already installed");
+                        }
+                    });
+
+                    await RunFunction("Removing Local Services", cleanProgress, () =>
                     {
-                        Log("Chrome already installed");
-                    }
-                });
+                        RemoveAll(cleanProgress);
+                        setProgress(cleanProgress, 50);
+                        InstallServices("skyview-services-3.0.367.msi");
+                    });
 
-                await RunFunction("Removing Local Services", cleanProgress, () =>
+
+                    setStatus("Manual Action Required. (Install Radianse.io as app)");
+
+                    ConfigureChrome();  // Open radianse.io, run shell:startup
+
+                    startButton.Text = "Continue Migration";
+
+                    startButton.Enabled = true;
+
+                    MigrationState = 1; // Set migration state to 1 (last step is user management)
+
+                    MessageBox.Show("Please install Radainse as an app.", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
                 {
-                    RemoveAll(cleanProgress);
-                    setProgress(cleanProgress, 50);
-                    InstallServices("skyview-services-3.0.367.msi");
-                });
+                    await RunFunction("Updating Users", userProgress, () =>
+                    {
+                        DeleteUser("Kiosk");
+                        setProgress(userProgress, 50);
+                        RemoveUserPassword(currentUser);
+                        setProgress(userProgress, 75);
+                        RenameUser(currentUser, "Radianse");
+                    });
 
-                setStatus("Manual Action Required. (Install Radianse.io as app)");
+                    setStatus("Migration Complete!");
 
-                ConfigureChrome();  // Open radianse.io, run shell:startup
-
-                MessageBox.Show("Please install Radainse as an app.\nThen hit 'OK'", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                await RunFunction("Updating Users", userProgress, () =>
-                {
-                    DeleteUser("Kiosk");
-                    setProgress(userProgress, 50);
-                    RenameUser(currentUser, "Radianse");
-                    setProgress(userProgress, 75);
-                    RemoveUserPassword("Radianse");
-                });
-
-                setStatus("Migration Complete!");
-
-                MessageBox.Show("Migration completed successfully.\nPlease log out and log back in or restart your computer.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
+                    MessageBox.Show("Migration completed successfully.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             });
         }
 
@@ -201,6 +219,41 @@ namespace Migration_RadAdmin
                         // Print full line (usually for SC, should be small)
                         outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + Environment.NewLine)));
                     }
+
+                    outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + Environment.NewLine)));
+                }
+
+                // After executing function, then return to main stream
+                process?.WaitForExit();
+            }
+            catch (Exception e)
+            {
+                Log("ERROR: " + e.Message);
+            }
+        }
+
+        private void RunDelete(string command, string args)
+        {
+            try
+            {
+                ProcessStartInfo funcInfo = new ProcessStartInfo(command, args)
+                {
+                    FileName = command,
+                    Arguments = args,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    Verb = "runas",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+
+                // Start the program/args
+                var process = Process.Start(funcInfo);
+
+                // While there's still output, read line
+                while (!process.StandardOutput.EndOfStream)
+                {
+                    string line = process.StandardOutput.ReadLine();
 
                     outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + Environment.NewLine)));
                 }
@@ -293,6 +346,7 @@ namespace Migration_RadAdmin
 
                 Process process = Process.Start(funcInfo);
 
+                // If output is an error, return false
                 string output = process.StandardOutput.ReadToEnd();
                 process.WaitForExit();
 
@@ -331,11 +385,15 @@ namespace Migration_RadAdmin
         {
             try
             {
+                // Check if user exists
                 bool user = RunReturn("powershell.exe", $"Get-LocalUser -Name {userName}");
 
                 if (user)
                 {
-                    RunTerminal("powershell.exe", $"Remove-LocalUser -Name ${userName}");
+                    string computerName = Environment.MachineName;
+                    
+                    // Delete user
+                    RunDelete("powershell.exe", $"Remove-LocalUser -Name \"{userName}\"");
                     Log($"User '{userName}' deleted successfully.");
                 }
                 else
@@ -353,10 +411,12 @@ namespace Migration_RadAdmin
         {
             try
             {
+                // Check if user exists
                 bool user = RunReturn("powershell.exe", $"Get-LocalUser -Name {oldName}");
 
                 if (user)
                 {
+                    // Rename user
                     RunTerminal("powershell.exe", $"Set-LocalUser -Name {oldName} -FullName {newName}");
                     Log($"User '{oldName}' renamed successfully to '{newName}'.");
                 }
@@ -375,11 +435,13 @@ namespace Migration_RadAdmin
         {
             try
             {
+                // Check if user exists
                 DirectoryEntry localMachine = new DirectoryEntry("WinNT://" + Environment.MachineName);
                 DirectoryEntry user = localMachine.Children.Find(userName);
 
                 if (user != null)
                 {
+                    // Remove password; this was the only way I could find to do it without a password
                     user.Invoke("SetPassword", new object[] { "" });
                     user.CommitChanges();
                     Log($"Password for '{userName}' was removed successfully.");
@@ -419,6 +481,7 @@ namespace Migration_RadAdmin
         {
             outputBox.Invoke((MethodInvoker)(() =>
             {
+                // Send text to the output box, scroll to bottom
                 outputBox.AppendText(Environment.NewLine + msg + Environment.NewLine);
                 outputBox.ScrollToCaret();
             }));
@@ -441,9 +504,8 @@ namespace Migration_RadAdmin
                 // Start the program/args
                 var process = Process.Start(funcInfo);
 
-
+                // If the output is an error, return false
                 string output = process.StandardOutput.ReadToEnd();
-
                 return !string.IsNullOrWhiteSpace(output) && !string.IsNullOrWhiteSpace(output);
             }
             catch (Exception e)
@@ -455,7 +517,7 @@ namespace Migration_RadAdmin
 
         private void RemoveAll(ProgressBar bar)
         {
-            string[] wildcards = new[] { "radianse", "airpointe", "tanning", "massage", "kiosk" };
+            string[] wildcards = new[] { "radianse", "airpointe", "tanning", "massage", "kiosk", "local services" };
             string[] literals = new[] { "UpdateService", "ServiceManager" };
 
             RemovePrograms(wildcards, bar);
@@ -478,24 +540,31 @@ namespace Migration_RadAdmin
 
             foreach (string path in registries)
             {
+                // Loop the LM and CU registries
                 var rootKey = Registry.LocalMachine.OpenSubKey(path) ?? Registry.CurrentUser.OpenSubKey(path);
                 if (rootKey == null) continue;
 
                 foreach (var subKeyName in rootKey.GetSubKeyNames())
                 {
+                    // If there's a subkey with a keyword, grab it, assign to variable
                     if (!keywords.Any(keyword => subKeyName.Contains(keyword, StringComparison.OrdinalIgnoreCase))) continue;
-
                     var subKey = rootKey.OpenSubKey(subKeyName);
                     if (subKey == null) continue;
 
+                    // Try to pull the quiet uninstall, if not possible, pull the normal uninstall string
                     string uninstallString = subKey.GetValue("QuietUninstallString")?.ToString() ?? subKey.GetValue("UninstallString")?.ToString();
                     
+                    // Visual Studio was angry
                     if (string.IsNullOrEmpty(uninstallString))
                     {
                         Log($"No uninstall string found for {subKeyName}");
                         continue; 
                     }
+                    
+                    // Stop programs before deleting
+                    StopPrograms(keywords);
 
+                    // Uninstall hits
                     Log($"Uninstalling: {subKey.GetValue("DisplayName")?.ToString()}");
                     RunTerminal("cmd.exe", $"/c \"{uninstallString}\"");
                 }
@@ -503,6 +572,50 @@ namespace Migration_RadAdmin
                 setProgress(bar, 50);
             }
         }
+
+        private void StopPrograms(string[] keywords)
+        {
+            try
+            {
+                // Stores proceses
+                List<string> validProcesses = new List<string>();
+
+                foreach (string processName in keywords)
+                {
+                    ProcessStartInfo funcInfo = new ProcessStartInfo()
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = "Get-Process | Where-Object { $_.ProcessName -match " + $"'{processName}'" + "}" + " | Select-Object -ExpandProperty ProcessName",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    };
+
+                    var process = Process.Start(funcInfo);
+                    string output = process.StandardOutput.ReadToEnd();
+
+                    // If no error, pull the match and add to validProcess to be deleted later
+                    if (!string.IsNullOrEmpty(output) && !string.IsNullOrWhiteSpace(output))
+                    {
+                        Log($"Valid process found: {output}");
+                        validProcesses.Add(output.Trim());
+                    }
+                }
+
+                // Stop programs before deletion to ensure they're deleted properly
+                foreach (string processName in validProcesses)
+                {
+                    RunTerminal("taskkill.exe", $"/FI 'USERNAME eq Kiosk' /IM {processName} /F");
+                    Log($"Stopped process: {processName}");
+                }
+            }
+            catch (Exception e)
+            {
+                Log($"Error stopping process: {e.Message}");
+            }
+        }
+
 
         private void RemoveServices(string[] keywords, string[] literals, ProgressBar bar)
         {
@@ -528,14 +641,14 @@ namespace Migration_RadAdmin
                     // Get whole output, if text trim and save
                     string output = process.StandardOutput.ReadToEnd();
 
-                    // If there's a name, save it
+                    // If there's a keyword found (names will output), save it
                     if (!string.IsNullOrEmpty(output) && !string.IsNullOrWhiteSpace(output))
                     {
                         Log($"Valid service found: {output}");
                         validServices.Add(output.Trim());
                     }
                 }
-                // Process all literal services
+                // Process all literal services; makes sure unrelated services aren't deleted
                 foreach (string service in literals)
                 {
                     if (RunReturn("powershell.exe", "Get-Service | Where-Object { $_.Name -eq " + $"{service}" + "}" + " | Select-Object -ExpandProperty Name"))
@@ -566,20 +679,22 @@ namespace Migration_RadAdmin
             setStatus("Installing Skyview Services...");
             statusText.Invoke((MethodInvoker)(() => servicesLabel.Text = "Installing Skyview Services"));
 
-            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string installPath = Path.Combine(desktopPath, installFile);
-            string migrationInstallPath = Path.Combine(desktopPath, "migration", installFile);
+            string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string scriptDir = AppDomain.CurrentDomain.BaseDirectory;
+
+            string desktopPath = Path.Combine(desktop, installFile);
+            string migrationInstallPath = Path.Combine(scriptDir, installFile);
 
             ProcessStartInfo funcInfo = new ProcessStartInfo
             {
                 FileName = "msiexec.exe",
-                Arguments = $"/i \"{installPath}\" /qn",
+                Arguments = $"/i \"{desktopPath}\" /qn",
                 UseShellExecute = true
             };
 
-            if (File.Exists(installPath))
+            if (File.Exists(desktopPath))
             {
-                Log($"Installing Skyview services found at: {installPath}");
+                Log($"Installing Skyview services found at: {desktopPath}");
                 var process = Process.Start(funcInfo);
                 process?.WaitForExit();
             }
@@ -591,7 +706,20 @@ namespace Migration_RadAdmin
             }
             else
             {
-                Log($"No services found at: {installPath} || {migrationInstallPath}");
+                Log($"No services found at: {desktopPath} || {migrationInstallPath}");
+            }
+        }
+        private void RestartPowershell()
+        {
+            try
+            {
+                // Fixes chocolatey
+                RunTerminal("powershell.exe", "-Command \"Set-ExecutionPolicy Bypass -Scope Process -Force; exit\"");
+                Log("PowerShell context refreshed.");
+            }
+            catch (Exception e)
+            {
+                Log($"Error refreshing PowerShell context: {e.Message}");
             }
         }
 

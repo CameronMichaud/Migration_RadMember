@@ -166,6 +166,7 @@
             // 
             // outputBox
             // 
+            outputBox.BackColor = SystemColors.ControlLightLight;
             outputBox.Location = new Point(15, 371);
             outputBox.Multiline = true;
             outputBox.Name = "outputBox";
@@ -188,6 +189,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackColor = SystemColors.ControlLightLight;
             ClientSize = new Size(809, 542);
             Controls.Add(pictureBox1);
             Controls.Add(outputBox);
