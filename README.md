@@ -15,3 +15,4 @@ Hit "Start Migration":
 - Stops and Removes local services with keywords [radianse, airpointe, tanning, massage]
 - Installs Skyview services located either on the Desktop or Desktop\migration\
 - Starts Google Chrome
+- Starts shell:startup
