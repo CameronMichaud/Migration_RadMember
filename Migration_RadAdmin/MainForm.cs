@@ -161,7 +161,7 @@ namespace Migration_RadAdmin
 
                     setStatus("Migration Complete!");
 
-                    MessageBox.Show("Migration completed successfully.\nPlease log out and log back in or restart your computer.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Migration completed successfully.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             });
         }
