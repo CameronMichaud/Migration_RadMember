@@ -1,5 +1,6 @@
 using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.DirectoryServices;
 using System.IO;
@@ -7,10 +8,11 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.ServiceProcess;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
-using System.Text.RegularExpressions;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Migration_RadAdmin
 {
@@ -80,17 +82,36 @@ namespace Migration_RadAdmin
 
                 await RunFunction("Installing Chrome", chromeProgress, () =>
                 {
-                    bool chrome = ChromeInstalled();
-                    bool winget = WingetInstalled();
+                    bool chrome = IsInstalled("chrome.exe", "--version");
+                    bool winget = IsInstalled("winget.exe", "--version");
+                    bool choco = IsInstalled("choco.exe", "-?");
+
                     if (!chrome && winget)
                     {
                         Log("Installing Chrome via winget (this may take a few minutes)");
                         RunTerminal("powershell.exe", "winget install Google.Chrome --silent --accept-source-agreements --accept-package-agreements");
                     }
-                    else if (!chrome && !winget)
+                    else if (!chrome && !winget && choco)
                     {
-                        Log("===MANUAL ACTION REQURED===`nPlease download and install chrome.");
-                        RunTerminal("cmd.exe", $@"/c start firefox https://www.google.com/chrome/");
+                        Log("Installing Chrome via chocolatey (this may take a few minutes)");
+                        RunTerminal("powershell.exe", "choco install googlechrome -y");
+                    }
+                    else if (!chrome && !winget && !choco)
+                    {
+                        // If there's no package manager installed, try to donwload chocolatey
+                        choco = InstallChocolatey();
+                        if (choco)
+                        {
+                            Log("Installing Chrome via chocolatey (this may take a few minutes)");
+                            RunTerminal("powershell.exe", "choco install googlechrome -y");
+                        }
+                        else 
+                        {
+                            Log("No package manager installed; Chrome must be downloaded manually.");
+                            Log("===MANUAL ACTION REQURED===");
+                            Log("If you have Firefox installed, it will open the download page for Chrome.");
+                            RunTerminal("cmd.exe", $@"/c start firefox https://www.google.com/chrome/");
+                        }
                     }
                     else
                     {
@@ -195,6 +216,8 @@ namespace Migration_RadAdmin
 
         private bool DotNetInstalled(string version)
         {
+            // Following the guide for https://chocolatey.org/install
+            // Sets execution policy for the process, then downloads
             try
             {
                 ProcessStartInfo funcInfo = new ProcessStartInfo
@@ -222,40 +245,47 @@ namespace Migration_RadAdmin
             }
         }
 
-        private bool WingetInstalled()
+        private bool InstallChocolatey()
         {
             try
             {
-                ProcessStartInfo funcInfo = new ProcessStartInfo
+                // Check if Chocolatey is already installed
+                if (IsInstalled("choco.exe", "-?"))
                 {
-                    FileName = "winget",
-                    Arguments = "--version",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                Process process = Process.Start(funcInfo);
-
-                string output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-
-                return (!string.IsNullOrWhiteSpace(output) && !string.IsNullOrEmpty(output));
+                    Log("Chocolatey is already installed.");
+                    return true;
+                }
+                // Download and install Chocolatey
+                // Following the guide for https://chocolatey.org/install
+                Log("Installing Chocolatey...");
+                RunTerminal("powershell.exe", "Set-ExecutionPolicy Bypass -Scope Process; Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))");
+                // Verify installation
+                if (IsInstalled("choco.exe", "-?"))
+                {
+                    Log("Chocolatey installed successfully.");
+                    return true;
+                }
+                else
+                {
+                    Log("Chocolatey installation failed.");
+                    return false;
+                }
             }
-            catch
+            catch (Exception e)
             {
+                Log($"Error installing Chocolatey: {e.Message}");
                 return false;
             }
         }
 
-        private bool ChromeInstalled()
+        private bool IsInstalled(string command, string args)
         {
             try
             {
                 ProcessStartInfo funcInfo = new ProcessStartInfo
                 {
-                    FileName = "chrome",
-                    Arguments = "--version",
+                    FileName = command,
+                    Arguments = args,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
@@ -279,7 +309,7 @@ namespace Migration_RadAdmin
             // Start shell:startup for chrome shortcut
             Process.Start("explorer.exe", "shell:startup").WaitForExit();
 
-            bool chrome = ChromeInstalled();
+            bool chrome = IsInstalled("chrome.exe", "--version");
 
             // Start Chrome if it exists and open to skyview admin page
             string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
@@ -287,7 +317,7 @@ namespace Migration_RadAdmin
             {
                 Process.Start(chromePath, "radianse.io");
             }
-            if (chrome)
+            else if (chrome)
             {
                 RunTerminal("chrome.exe", "radianse.io");
             }
