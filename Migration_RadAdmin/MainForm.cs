@@ -41,8 +41,6 @@ namespace Migration_RadAdmin
             // Buttons won't work without this, I'm unsure why
             startButton.Click += startButton_Click;
             stopButton.Click += stopButton_Click;
-
-            StartDirectoryDetector(); // Watch for shell:startup changes
         }
 
         private async void startButton_Click(object sender, EventArgs e)
@@ -144,6 +142,8 @@ namespace Migration_RadAdmin
 
                     startButton.Text = "Continue Migration";
 
+                    MigrationState = 1; // Set migration state to 1 (last step is user management)
+
                     MessageBox.Show("Please install Radainse as an app.", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
@@ -229,26 +229,40 @@ namespace Migration_RadAdmin
                 Log("ERROR: " + e.Message);
             }
         }
-        private void StartDirectoryDetector()
+
+        private void RunDelete(string command, string args)
         {
-            string startupPath = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
-            FileSystemWatcher shortcutWatcher = new FileSystemWatcher(startupPath);
+            try
+            {
+                ProcessStartInfo funcInfo = new ProcessStartInfo(command, args)
+                {
+                    FileName = command,
+                    Arguments = args,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    Verb = "runas",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
 
-            shortcutWatcher.NotifyFilter = NotifyFilters.FileName;
-            shortcutWatcher.Filter = "*.*";
+                // Start the program/args
+                var process = Process.Start(funcInfo);
 
-            shortcutWatcher.Created += (sender, e) => OnCreated(sender, e); // ???
+                // While there's still output, read line
+                while (!process.StandardOutput.EndOfStream)
+                {
+                    string line = process.StandardOutput.ReadLine();
 
-            shortcutWatcher.EnableRaisingEvents = true;
-        }
-        private void OnCreated(object sender, FileSystemEventArgs e)
-        {
-            Log($"File created: {e.FullPath}");
+                    outputBox.Invoke((MethodInvoker)(() => outputBox.AppendText(line + Environment.NewLine)));
+                }
 
-            Invoke((MethodInvoker)(() => startButton.Enabled = true));
-            setStatus("Startup configured, please continue migration.");
-
-            MigrationState = 1; // shell:startup populated
+                // After executing function, then return to main stream
+                process?.WaitForExit();
+            }
+            catch (Exception e)
+            {
+                Log("ERROR: " + e.Message);
+            }
         }
 
         private bool DotNetInstalled(string version)
@@ -375,13 +389,9 @@ namespace Migration_RadAdmin
                 if (user)
                 {
                     string computerName = Environment.MachineName;
-
-                    // Log out the user (prevents error removing them, black screen)
-                    // Split query user output and grab the third column (id)
-                    //RunTerminal("powershell.exe", $@"logoff (quser | Where-Object {{$_ -match 'Kiosk'}} | ForEach-Object {{($_ -split '\s+')[2]}}) /server:{computerName}");
                     
                     // Delete user
-                    RunTerminal("powershell.exe", $"Remove-LocalUser -Name {userName}");
+                    RunDelete("powershell.exe", $"Remove-LocalUser -Name \"{userName}\"");
                     Log($"User '{userName}' deleted successfully.");
                 }
                 else
@@ -505,7 +515,7 @@ namespace Migration_RadAdmin
 
         private void RemoveAll(ProgressBar bar)
         {
-            string[] wildcards = new[] { "radianse", "airpointe", "tanning", "massage", "kiosk" };
+            string[] wildcards = new[] { "radianse", "airpointe", "tanning", "massage", "kiosk", "local services" };
             string[] literals = new[] { "UpdateService", "ServiceManager" };
 
             RemovePrograms(wildcards, bar);
