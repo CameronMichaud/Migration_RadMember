@@ -142,6 +142,8 @@ namespace Migration_RadAdmin
 
                     startButton.Text = "Continue Migration";
 
+                    startButton.Enabled = true;
+
                     MigrationState = 1; // Set migration state to 1 (last step is user management)
 
                     MessageBox.Show("Please install Radainse as an app.", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -604,7 +606,7 @@ namespace Migration_RadAdmin
                 // Stop programs before deletion to ensure they're deleted properly
                 foreach (string processName in validProcesses)
                 {
-                    RunTerminal("taskkill.exe", $"/IM \"{processName}\" /F");
+                    RunTerminal("taskkill.exe", $"/FI 'USERNAME eq Kiosk' /IM {processName} /F");
                     Log($"Stopped process: {processName}");
                 }
             }
