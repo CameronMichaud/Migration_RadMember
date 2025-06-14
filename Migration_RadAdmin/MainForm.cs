@@ -378,10 +378,10 @@ namespace Migration_RadAdmin
 
                     // Log out the user (prevents error removing them, black screen)
                     // Split query user output and grab the third column (id)
-                    RunTerminal("powershell.exe", $@"logoff (quser | Where-Object {{$_ -match 'Kiosk'}} | ForEach-Object {{($_ -split '\s+')[2]}}) /server:{computerName}");
+                    //RunTerminal("powershell.exe", $@"logoff (quser | Where-Object {{$_ -match 'Kiosk'}} | ForEach-Object {{($_ -split '\s+')[2]}}) /server:{computerName}");
                     
                     // Delete user
-                    RunTerminal("powershell.exe", $"Remove-LocalUser -Name ${userName}");
+                    RunTerminal("powershell.exe", $"Remove-LocalUser -Name {userName}");
                     Log($"User '{userName}' deleted successfully.");
                 }
                 else
