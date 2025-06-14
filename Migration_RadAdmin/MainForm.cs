@@ -679,20 +679,22 @@ namespace Migration_RadAdmin
             setStatus("Installing Skyview Services...");
             statusText.Invoke((MethodInvoker)(() => servicesLabel.Text = "Installing Skyview Services"));
 
-            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string installPath = Path.Combine(desktopPath, installFile);
-            string migrationInstallPath = Path.Combine(desktopPath, "migration", installFile);
+            string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string scriptDir = AppDomain.CurrentDomain.BaseDirectory;
+
+            string desktopPath = Path.Combine(desktop, installFile);
+            string migrationInstallPath = Path.Combine(scriptDir, installFile);
 
             ProcessStartInfo funcInfo = new ProcessStartInfo
             {
                 FileName = "msiexec.exe",
-                Arguments = $"/i \"{installPath}\" /qn",
+                Arguments = $"/i \"{desktopPath}\" /qn",
                 UseShellExecute = true
             };
 
-            if (File.Exists(installPath))
+            if (File.Exists(desktopPath))
             {
-                Log($"Installing Skyview services found at: {installPath}");
+                Log($"Installing Skyview services found at: {desktopPath}");
                 var process = Process.Start(funcInfo);
                 process?.WaitForExit();
             }
@@ -704,7 +706,7 @@ namespace Migration_RadAdmin
             }
             else
             {
-                Log($"No services found at: {installPath} || {migrationInstallPath}");
+                Log($"No services found at: {desktopPath} || {migrationInstallPath}");
             }
         }
         private void RestartPowershell()
