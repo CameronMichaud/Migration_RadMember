@@ -1,3 +1,4 @@
+using Microsoft.VisualBasic.Logging;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,8 @@ namespace Migration_RadAdmin
 {
     public partial class MainForm : Form
     {
+        // Used to track progress of the migration when disabling the start button
+        private static int MigrationState = 0; // 0 = not started, 1 = chrome installed
         public MainForm()
         {
             InitializeComponent();
@@ -38,6 +41,8 @@ namespace Migration_RadAdmin
             // Buttons won't work without this, I'm unsure why
             startButton.Click += startButton_Click;
             stopButton.Click += stopButton_Click;
+
+            StartDirectoryDetector(); // Watch for shell:startup changes
         }
 
         private async void startButton_Click(object sender, EventArgs e)
@@ -47,108 +52,115 @@ namespace Migration_RadAdmin
 
             await Task.Run(async () =>
             {
-                await RunFunction("Installing .NET SDKs", dotnetProgress, () =>
+                if (MigrationState == 0)
                 {
-                    bool dotnet6 = DotNetInstalled("6");
-                    if (!dotnet6)
+                    await RunFunction("Installing .NET SDKs", dotnetProgress, () =>
                     {
-                        Log("Dowloading via curl .NET 6 (this may take a few minutes)");
-                        RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
-                        Log("Installing .NET 6 (this may take a few minutes)");
-                        RunTerminal("cmd.exe", $@"/c start C:\\users\{currentUser}\desktop\dotnet6.exe /quiet");
-                        Log(".NET 6 install finished.\n");
-                    }
-                    else
-                    {
-                        Log(".NET 6 already installed");
-                    }
+                        bool dotnet6 = DotNetInstalled("6");
+                        if (!dotnet6)
+                        {
+                            Log("Dowloading via curl .NET 6 (this may take a few minutes)");
+                            RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
+                            Log("Installing .NET 6 (this may take a few minutes)");
+                            RunTerminal("cmd.exe", $@"/c start C:\\users\{currentUser}\desktop\dotnet6.exe /quiet");
+                            Log(".NET 6 install finished.\n");
+                        }
+                        else
+                        {
+                            Log(".NET 6 already installed");
+                        }
 
                         setProgress(dotnetProgress, 50);
 
-                    bool dotnet8 = DotNetInstalled("8");
-                    if (!dotnet8)
-                    {
-                        Log("Dowloading via curl .NET 8 (this may take a few minutes)");
-                        RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
-                        Log("Installing .NET 8 (this may take a few minutes)");
-                        RunTerminal("cmd.exe", $@"/c C:\\users\{currentUser}\desktop\dotnet8.exe /quiet");
-                        Log(".NET 8 install finished.\n");
-                    }
-                    else
-                    {
-                        Log(".NET 8 already installed");
-                    }
-                });
+                        bool dotnet8 = DotNetInstalled("8");
+                        if (!dotnet8)
+                        {
+                            Log("Dowloading via curl .NET 8 (this may take a few minutes)");
+                            RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
+                            Log("Installing .NET 8 (this may take a few minutes)");
+                            RunTerminal("cmd.exe", $@"/c C:\\users\{currentUser}\desktop\dotnet8.exe /quiet");
+                            Log(".NET 8 install finished.\n");
+                        }
+                        else
+                        {
+                            Log(".NET 8 already installed");
+                        }
+                    });
 
-                await RunFunction("Installing Chrome", chromeProgress, () =>
-                {
-                    bool chrome = IsInstalled("chrome.exe", "--version");
-                    bool winget = IsInstalled("winget.exe", "--version");
-                    bool choco = IsInstalled("choco.exe", "-?");
-
-                    if (!chrome && winget)
+                    await RunFunction("Installing Chrome", chromeProgress, () =>
                     {
-                        Log("Installing Chrome via winget (this may take a few minutes)");
-                        RunTerminal("powershell.exe", "winget install Google.Chrome --silent --accept-source-agreements --accept-package-agreements");
-                    }
-                    else if (!chrome && !winget && choco)
-                    {
-                        Log("Installing Chrome via chocolatey (this may take a few minutes)");
-                        RunTerminal("powershell.exe", "choco install googlechrome -y");
-                    }
-                    else if (!chrome && !winget && !choco)
-                    {
-                        // If there's no package manager installed, try to donwload chocolatey
-                        choco = InstallChocolatey();
+                        bool chrome = IsInstalled("chrome.exe", "--version");
+                        bool winget = IsInstalled("winget.exe", "--version");
+                        bool choco = IsInstalled("choco.exe", "-?");
 
-                        // Restart PowerShell to apply changes
-                        RestartPowershell();
-
-                        if (choco)
+                        if (!chrome && winget)
+                        {
+                            Log("Installing Chrome via winget (this may take a few minutes)");
+                            RunTerminal("powershell.exe", "winget install Google.Chrome --silent --accept-source-agreements --accept-package-agreements");
+                        }
+                        else if (!chrome && !winget && choco)
                         {
                             Log("Installing Chrome via chocolatey (this may take a few minutes)");
                             RunTerminal("powershell.exe", "choco install googlechrome -y");
                         }
-                        else 
+                        else if (!chrome && !winget && !choco)
                         {
-                            Log("No package manager installed; Chrome must be downloaded manually.");
-                            Log("===MANUAL ACTION REQURED===");
-                            Log("If you have Firefox installed, it will open the download page for Chrome.");
-                            RunTerminal("cmd.exe", $@"/c start firefox https://www.google.com/chrome/");
+                            // If there's no package manager installed, try to donwload chocolatey
+                            choco = InstallChocolatey();
+
+                            // Restart PowerShell to apply changes
+                            RestartPowershell();
+
+                            if (choco)
+                            {
+                                Log("Installing Chrome via chocolatey (this may take a few minutes)");
+                                RunTerminal("powershell.exe", "choco install googlechrome -y");
+                            }
+                            else
+                            {
+                                Log("No package manager installed; Chrome must be downloaded manually.");
+                                Log("===MANUAL ACTION REQURED===");
+                                Log("If you have Firefox installed, it will open the download page for Chrome.");
+                                RunTerminal("cmd.exe", $@"/c start firefox https://www.google.com/chrome/");
+                            }
                         }
-                    }
-                    else
+                        else
+                        {
+                            Log("Chrome already installed");
+                        }
+                    });
+
+                    await RunFunction("Removing Local Services", cleanProgress, () =>
                     {
-                        Log("Chrome already installed");
-                    }
-                });
+                        RemoveAll(cleanProgress);
+                        setProgress(cleanProgress, 50);
+                        InstallServices("skyview-services-3.0.367.msi");
+                    });
 
-                await RunFunction("Removing Local Services", cleanProgress, () =>
+
+                    setStatus("Manual Action Required. (Install Radianse.io as app)");
+
+                    ConfigureChrome();  // Open radianse.io, run shell:startup
+
+                    startButton.Text = "Continue Migration";
+
+                    MessageBox.Show("Please install Radainse as an app.", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
                 {
-                    RemoveAll(cleanProgress);
-                    setProgress(cleanProgress, 50);
-                    InstallServices("skyview-services-3.0.367.msi");
-                });
+                    await RunFunction("Updating Users", userProgress, () =>
+                    {
+                        DeleteUser("Kiosk");
+                        setProgress(userProgress, 50);
+                        RemoveUserPassword(currentUser);
+                        setProgress(userProgress, 75);
+                        RenameUser(currentUser, "Radianse");
+                    });
 
-                setStatus("Manual Action Required. (Install Radianse.io as app)");
+                    setStatus("Migration Complete!");
 
-                ConfigureChrome();  // Open radianse.io, run shell:startup
-
-                MessageBox.Show("Please install Radainse as an app.\nThen hit 'OK'", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                await RunFunction("Updating Users", userProgress, () =>
-                {
-                    DeleteUser("Kiosk");
-                    setProgress(userProgress, 50);
-                    RemoveUserPassword("Radianse");
-                    setProgress(userProgress, 75);
-                    RenameUser(currentUser, "Radianse");
-                });
-
-                setStatus("Migration Complete!");
-
-                MessageBox.Show("Migration completed successfully.\nPlease log out and log back in or restart your computer.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
+                    MessageBox.Show("Migration completed successfully.\nPlease log out and log back in or restart your computer.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             });
         }
 
@@ -216,6 +228,27 @@ namespace Migration_RadAdmin
             {
                 Log("ERROR: " + e.Message);
             }
+        }
+        private void StartDirectoryDetector()
+        {
+            string startupPath = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+            FileSystemWatcher shortcutWatcher = new FileSystemWatcher(startupPath);
+
+            shortcutWatcher.NotifyFilter = NotifyFilters.FileName;
+            shortcutWatcher.Filter = "*.*";
+
+            shortcutWatcher.Created += (sender, e) => OnCreated(sender, e); // ???
+
+            shortcutWatcher.EnableRaisingEvents = true;
+        }
+        private void OnCreated(object sender, FileSystemEventArgs e)
+        {
+            Log($"File created: {e.FullPath}");
+
+            Invoke((MethodInvoker)(() => startButton.Enabled = true));
+            setStatus("Startup configured, please continue migration.");
+
+            MigrationState = 1; // shell:startup populated
         }
 
         private bool DotNetInstalled(string version)
@@ -341,6 +374,12 @@ namespace Migration_RadAdmin
 
                 if (user)
                 {
+                    string computerName = Environment.MachineName;
+
+                    // Log out the user (prevents error removing them, black screen)
+                    // Split query user output and grab the third column (id)
+                    RunTerminal("powershell.exe", $@"logoff (quser | Where-Object {{$_ -match 'Kiosk'}} | ForEach-Object {{($_ -split '\s+')[2]}}) /server:{computerName}");
+                    
                     // Delete user
                     RunTerminal("powershell.exe", $"Remove-LocalUser -Name ${userName}");
                     Log($"User '{userName}' deleted successfully.");
