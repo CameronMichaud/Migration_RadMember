@@ -100,6 +100,10 @@ namespace Migration_RadAdmin
                     {
                         // If there's no package manager installed, try to donwload chocolatey
                         choco = InstallChocolatey();
+
+                        // Restart PowerShell to apply changes
+                        RestartPowershell();
+
                         if (choco)
                         {
                             Log("Installing Chrome via chocolatey (this may take a few minutes)");
@@ -136,9 +140,9 @@ namespace Migration_RadAdmin
                 {
                     DeleteUser("Kiosk");
                     setProgress(userProgress, 50);
-                    RenameUser(currentUser, "Radianse");
-                    setProgress(userProgress, 75);
                     RemoveUserPassword("Radianse");
+                    setProgress(userProgress, 75);
+                    RenameUser(currentUser, "Radianse");
                 });
 
                 setStatus("Migration Complete!");
@@ -293,6 +297,7 @@ namespace Migration_RadAdmin
 
                 Process process = Process.Start(funcInfo);
 
+                // If output is an error, return false
                 string output = process.StandardOutput.ReadToEnd();
                 process.WaitForExit();
 
@@ -331,10 +336,12 @@ namespace Migration_RadAdmin
         {
             try
             {
+                // Check if user exists
                 bool user = RunReturn("powershell.exe", $"Get-LocalUser -Name {userName}");
 
                 if (user)
                 {
+                    // Delete user
                     RunTerminal("powershell.exe", $"Remove-LocalUser -Name ${userName}");
                     Log($"User '{userName}' deleted successfully.");
                 }
@@ -353,10 +360,12 @@ namespace Migration_RadAdmin
         {
             try
             {
+                // Check if user exists
                 bool user = RunReturn("powershell.exe", $"Get-LocalUser -Name {oldName}");
 
                 if (user)
                 {
+                    // Rename user
                     RunTerminal("powershell.exe", $"Set-LocalUser -Name {oldName} -FullName {newName}");
                     Log($"User '{oldName}' renamed successfully to '{newName}'.");
                 }
@@ -375,11 +384,13 @@ namespace Migration_RadAdmin
         {
             try
             {
+                // Check if user exists
                 DirectoryEntry localMachine = new DirectoryEntry("WinNT://" + Environment.MachineName);
                 DirectoryEntry user = localMachine.Children.Find(userName);
 
                 if (user != null)
                 {
+                    // Remove password; this was the only way I could find to do it without a password
                     user.Invoke("SetPassword", new object[] { "" });
                     user.CommitChanges();
                     Log($"Password for '{userName}' was removed successfully.");
@@ -419,6 +430,7 @@ namespace Migration_RadAdmin
         {
             outputBox.Invoke((MethodInvoker)(() =>
             {
+                // Send text to the output box, scroll to bottom
                 outputBox.AppendText(Environment.NewLine + msg + Environment.NewLine);
                 outputBox.ScrollToCaret();
             }));
@@ -441,9 +453,8 @@ namespace Migration_RadAdmin
                 // Start the program/args
                 var process = Process.Start(funcInfo);
 
-
+                // If the output is an error, return false
                 string output = process.StandardOutput.ReadToEnd();
-
                 return !string.IsNullOrWhiteSpace(output) && !string.IsNullOrWhiteSpace(output);
             }
             catch (Exception e)
@@ -478,16 +489,19 @@ namespace Migration_RadAdmin
 
             foreach (string path in registries)
             {
+                // Loop the LM and CU registries
                 var rootKey = Registry.LocalMachine.OpenSubKey(path) ?? Registry.CurrentUser.OpenSubKey(path);
                 if (rootKey == null) continue;
 
                 foreach (var subKeyName in rootKey.GetSubKeyNames())
                 {
+                    // If there's a subkey with a keyword, grab it, pull an uninstall string
                     if (!keywords.Any(keyword => subKeyName.Contains(keyword, StringComparison.OrdinalIgnoreCase))) continue;
 
                     var subKey = rootKey.OpenSubKey(subKeyName);
                     if (subKey == null) continue;
 
+                    // Try to pull the quiet uninstall, if not possible, pull the normal uninstall string
                     string uninstallString = subKey.GetValue("QuietUninstallString")?.ToString() ?? subKey.GetValue("UninstallString")?.ToString();
                     
                     if (string.IsNullOrEmpty(uninstallString))
@@ -528,14 +542,14 @@ namespace Migration_RadAdmin
                     // Get whole output, if text trim and save
                     string output = process.StandardOutput.ReadToEnd();
 
-                    // If there's a name, save it
+                    // If there's a keyword found (names will output), save it
                     if (!string.IsNullOrEmpty(output) && !string.IsNullOrWhiteSpace(output))
                     {
                         Log($"Valid service found: {output}");
                         validServices.Add(output.Trim());
                     }
                 }
-                // Process all literal services
+                // Process all literal services; makes sure unrelated services aren't deleted
                 foreach (string service in literals)
                 {
                     if (RunReturn("powershell.exe", "Get-Service | Where-Object { $_.Name -eq " + $"{service}" + "}" + " | Select-Object -ExpandProperty Name"))
@@ -592,6 +606,19 @@ namespace Migration_RadAdmin
             else
             {
                 Log($"No services found at: {installPath} || {migrationInstallPath}");
+            }
+        }
+        private void RestartPowershell()
+        {
+            try
+            {
+                // Fixes chocolatey
+                RunTerminal("powershell.exe", "-Command \"Set-ExecutionPolicy Bypass -Scope Process -Force; exit\"");
+                Log("PowerShell context reloaded.");
+            }
+            catch (Exception e)
+            {
+                Log($"Error refreshing PowerShell context: {e.Message}");
             }
         }
 
