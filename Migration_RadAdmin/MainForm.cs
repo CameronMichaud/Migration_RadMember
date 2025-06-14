@@ -544,21 +544,25 @@ namespace Migration_RadAdmin
 
                 foreach (var subKeyName in rootKey.GetSubKeyNames())
                 {
-                    // If there's a subkey with a keyword, grab it, pull an uninstall string
+                    // If there's a subkey with a keyword, grab it, assign to variable
                     if (!keywords.Any(keyword => subKeyName.Contains(keyword, StringComparison.OrdinalIgnoreCase))) continue;
-
                     var subKey = rootKey.OpenSubKey(subKeyName);
                     if (subKey == null) continue;
 
                     // Try to pull the quiet uninstall, if not possible, pull the normal uninstall string
                     string uninstallString = subKey.GetValue("QuietUninstallString")?.ToString() ?? subKey.GetValue("UninstallString")?.ToString();
                     
+                    // Visual Studio was angry
                     if (string.IsNullOrEmpty(uninstallString))
                     {
                         Log($"No uninstall string found for {subKeyName}");
                         continue; 
                     }
+                    
+                    // Stop programs before deleting
+                    StopPrograms(keywords);
 
+                    // Uninstall hits
                     Log($"Uninstalling: {subKey.GetValue("DisplayName")?.ToString()}");
                     RunTerminal("cmd.exe", $"/c \"{uninstallString}\"");
                 }
@@ -566,6 +570,50 @@ namespace Migration_RadAdmin
                 setProgress(bar, 50);
             }
         }
+
+        private void StopPrograms(string[] keywords)
+        {
+            try
+            {
+                // Stores proceses
+                List<string> validProcesses = new List<string>();
+
+                foreach (string processName in keywords)
+                {
+                    ProcessStartInfo funcInfo = new ProcessStartInfo()
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = "Get-Process | Where-Object { $_.ProcessName -match " + $"'{processName}'" + "}" + " | Select-Object -ExpandProperty ProcessName",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    };
+
+                    var process = Process.Start(funcInfo);
+                    string output = process.StandardOutput.ReadToEnd();
+
+                    // If no error, pull the match and add to validProcess to be deleted later
+                    if (!string.IsNullOrEmpty(output) && !string.IsNullOrWhiteSpace(output))
+                    {
+                        Log($"Valid process found: {output}");
+                        validProcesses.Add(output.Trim());
+                    }
+                }
+
+                // Stop programs before deletion to ensure they're deleted properly
+                foreach (string processName in validProcesses)
+                {
+                    RunTerminal("taskkill.exe", $"/IM \"{processName}\" /F");
+                    Log($"Stopped process: {processName}");
+                }
+            }
+            catch (Exception e)
+            {
+                Log($"Error stopping process: {e.Message}");
+            }
+        }
+
 
         private void RemoveServices(string[] keywords, string[] literals, ProgressBar bar)
         {
@@ -663,7 +711,7 @@ namespace Migration_RadAdmin
             {
                 // Fixes chocolatey
                 RunTerminal("powershell.exe", "-Command \"Set-ExecutionPolicy Bypass -Scope Process -Force; exit\"");
-                Log("PowerShell context reloaded.");
+                Log("PowerShell context refreshed.");
             }
             catch (Exception e)
             {
