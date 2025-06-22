@@ -58,8 +58,12 @@ namespace Migration_RadAdmin
                         bool dotnet6 = DotNetInstalled("6");
                         if (!dotnet6)
                         {
+                            // DOWNLOAD
                             Log("Dowloading via curl .NET 6 (this may take a few minutes)");
-                            RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet6.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
+                            string dotnet6URL = "https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe";
+                            Task task = GetInstaller(dotnet6URL, $@"C:\\users\{currentUser}\desktop\dotnet6.exe");
+
+                            // INSTALL
                             Log("Installing .NET 6 (this may take a few minutes)");
                             RunTerminal("cmd.exe", $@"/c start C:\\users\{currentUser}\desktop\dotnet6.exe /quiet");
                             Log(".NET 6 install finished.\n");
@@ -74,8 +78,12 @@ namespace Migration_RadAdmin
                         bool dotnet8 = DotNetInstalled("8");
                         if (!dotnet8)
                         {
+                            // DOWNLOAD
                             Log("Dowloading via curl .NET 8 (this may take a few minutes)");
-                            RunTerminal("cmd.exe", $@"/c curl -o C:\\users\{currentUser}\desktop\dotnet8.exe https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
+                            string dotnet8URL = "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe";
+                            Task task = GetInstaller(dotnet8URL, $@"C:\\users\{currentUser}\desktop\dotnet8.exe");
+
+                            // INSTALL
                             Log("Installing .NET 8 (this may take a few minutes)");
                             RunTerminal("cmd.exe", $@"/c C:\\users\{currentUser}\desktop\dotnet8.exe /quiet");
                             Log(".NET 8 install finished.\n");
@@ -104,7 +112,8 @@ namespace Migration_RadAdmin
                         }
                         else if (!chrome && !winget && !choco)
                         {
-                            Task task = GetChrome();
+                            string chromeInstaller = "https://dl.google.com/chrome/install/latest/chrome_installer.exe";
+                            Task task = GetInstaller(chromeInstaller, $@"C:\\users\{currentUser}\destkop\chrome_installer.exe");
                         }
                         else
                         {
@@ -150,11 +159,8 @@ namespace Migration_RadAdmin
             });
         }
 
-        private async Task GetChrome()
+        private async Task GetInstaller(string url, string filePath)
         {
-            var url = "https://dl.google.com/chrome/install/latest/chrome_installer.exe";
-            var filePath = "chrome_installer.exe";
-
             using var httpClient = new HttpClient();
             using var response = await httpClient.GetAsync(url);
 
