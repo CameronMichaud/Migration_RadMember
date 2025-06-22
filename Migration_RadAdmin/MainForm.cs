@@ -685,23 +685,30 @@ namespace Migration_RadAdmin
             string desktopPath = Path.Combine(desktop, installFile);
             string migrationInstallPath = Path.Combine(scriptDir, installFile);
 
-            ProcessStartInfo funcInfo = new ProcessStartInfo
+            ProcessStartInfo desktopDirectory = new ProcessStartInfo
             {
                 FileName = "msiexec.exe",
-                Arguments = $"/i \"{desktopPath}\" /qn",
+                Arguments = $"/i \"{desktopPath}\" /quiet",
+                UseShellExecute = true
+            };
+
+            ProcessStartInfo currDirectory = new ProcessStartInfo
+            {
+                FileName = "msiexec.exe",
+                Arguments = $"/i \"{migrationInstallPath}\" /quiet",
                 UseShellExecute = true
             };
 
             if (File.Exists(desktopPath))
             {
                 Log($"Installing Skyview services found at: {desktopPath}");
-                var process = Process.Start(funcInfo);
+                var process = Process.Start(desktopDirectory);
                 process?.WaitForExit();
             }
             else if (File.Exists(migrationInstallPath))
             {
                 Log($"Installing Skyview services found at: {migrationInstallPath}");
-                var process = Process.Start(funcInfo);
+                var process = Process.Start(currDirectory);
                 process?.WaitForExit();
             }
             else
