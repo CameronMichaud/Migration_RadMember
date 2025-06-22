@@ -47,6 +47,7 @@ namespace Migration_RadAdmin
         private async void startButton_Click(object sender, EventArgs e)
         {
             startButton.Enabled = false;    // Grey out start migration during execution
+            startButton.Text = "Migrating...";
             string currentUser = Environment.UserName;
 
             await Task.Run(async () =>
@@ -96,7 +97,7 @@ namespace Migration_RadAdmin
 
                     await RunFunction("Installing Chrome", chromeProgress, async () =>
                     {
-                        bool chrome = IsInstalled("chrome.exe", "--version");
+                        bool chrome = File.Exists(@"C:\Program Files\Google\Chrome\Application\chrome.exe");
                         bool winget = IsInstalled("winget.exe", "--version");
                         bool choco = IsInstalled("choco.exe", "-?");
 
@@ -127,22 +128,32 @@ namespace Migration_RadAdmin
                     await RunFunction("Removing Local Services", cleanProgress, async () =>
                     {
                         RemoveAll(cleanProgress);
+                        setStatus("Manual Action Required. (Remove Local Services)");
+                        MigrationState = 1; // Set migration state to 1 (remove services)
+                        startButton.Text = "Continue Migration";
+                        startButton.Enabled = true;
+                        // MessageBox.Show("Please remove local services", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    });
+                }
+
+                else if (MigrationState == 1)
+                {
+                    await RunFunction("Installing Skyview Services", cleanProgress, async () =>
+                    {
                         setProgress(cleanProgress, 50);
                         InstallServices("skyview-services-3.0.367.msi");
                     });
 
-
+                    // INSTALL RADIANSE.IO AS APPLICATION:
                     setStatus("Manual Action Required. (Install Radianse.io as app)");
 
                     ConfigureChrome();  // Open radianse.io, run shell:startup
 
+                    MigrationState = 2; // Set migration state to 2 (last step is user management)
                     startButton.Text = "Continue Migration";
-
                     startButton.Enabled = true;
 
-                    MigrationState = 1; // Set migration state to 1 (last step is user management)
-
-                    MessageBox.Show("Please install Radainse as an app.", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // MessageBox.Show("Please install Radainse as an app.", "Manual action required", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
@@ -337,19 +348,13 @@ namespace Migration_RadAdmin
         private void ConfigureChrome()
         {
             // Start shell:startup for chrome shortcut
-            Process.Start("explorer.exe", "shell:startup").WaitForExit();
-
-            bool chrome = IsInstalled("chrome.exe", "--version");
+            Process.Start("explorer.exe", "shell:startup");
 
             // Start Chrome if it exists and open to skyview admin page
             string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
             if (File.Exists(chromePath))
             {
                 Process.Start(chromePath, "radianse.io");
-            }
-            else if (chrome)
-            {
-                RunTerminal("chrome.exe", "radianse.io");
             }
             else
             {
@@ -473,164 +478,15 @@ namespace Migration_RadAdmin
 
         private void RemoveAll(ProgressBar bar)
         {
-            string[] wildcards = new[] { "radianse", "airpointe", "local services", "tanning", "massage", "kiosk", "local services" };
-            string[] literals = new[] { "UpdateService", "ServiceManager" };
-
-            RemovePrograms(wildcards, bar);
-            RemoveServices(wildcards, literals, bar);
+            System.Diagnostics.Process.Start("control.exe", "appwiz.cpl");
+            Log("MANUAL ACTION REQUIRED: Please remove local services.");
 
             setProgress(bar, 75);
         }
 
-        private void RemovePrograms(string[] keywords, ProgressBar bar)
-        {
-            string[] registries = new[]
-            {
-                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
-                "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
-            };
-
-            // Stop programs before deleting
-            StopPrograms(keywords);
-
-            foreach (string path in registries)
-            {
-                // Loop the LM and CU registries
-                var rootKey = Registry.LocalMachine.OpenSubKey(path) ?? Registry.CurrentUser.OpenSubKey(path);
-                if (rootKey == null) continue;
-
-                foreach (var subKeyName in rootKey.GetSubKeyNames())
-                {
-                    // If there's a subkey with a keyword, grab it, assign to variable
-                    if (!keywords.Any(keyword => subKeyName.Contains(keyword, StringComparison.OrdinalIgnoreCase))) continue;
-                    var subKey = rootKey.OpenSubKey(subKeyName);
-                    if (subKey == null) continue;
-
-                    // Try to pull the quiet uninstall, if not possible, pull the normal uninstall string
-                    string uninstallString = subKey.GetValue("QuietUninstallString")?.ToString() ?? subKey.GetValue("UninstallString")?.ToString();
-
-                    // Visual Studio was angry
-                    if (string.IsNullOrEmpty(uninstallString))
-                    {
-                        Log($"No uninstall string found for {subKeyName}");
-                    }
-                    else
-                    {
-                        // Uninstall hits
-                        Log($"Uninstalling: {subKey.GetValue("DisplayName")?.ToString()}");
-                        RunTerminal("cmd.exe", $"/c {uninstallString} /quiet");
-                    }
-                }
-
-                setProgress(bar, 50);
-            }
-        }
-
-        private void StopPrograms(string[] keywords)
-        {
-            try
-            {
-                // Stores proceses
-                List<string> validProcesses = new List<string>();
-
-                foreach (string processName in keywords)
-                {
-                    ProcessStartInfo funcInfo = new ProcessStartInfo()
-                    {
-                        FileName = "powershell.exe",
-                        Arguments = "Get-Process | Where-Object { $_.ProcessName -match " + $"'{processName}'" + "}" + " | Select-Object -ExpandProperty ProcessName",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true,
-                        UseShellExecute = false
-                    };
-
-                    var process = Process.Start(funcInfo);
-                    string output = process.StandardOutput.ReadToEnd();
-
-                    // If no error, pull the match and add to validProcess to be deleted later
-                    if (!string.IsNullOrEmpty(output) && !string.IsNullOrWhiteSpace(output))
-                    {
-                        Log($"Valid process found: {output}");
-                        validProcesses.Add(output.Trim());
-                    }
-                }
-
-                // Stop programs before deletion to ensure they're deleted properly
-                foreach (string processName in validProcesses)
-                {
-                    RunTerminal("taskkill.exe", $"/FI 'USERNAME eq Kiosk' /IM {processName} /F");
-                    Log($"Stopped process: {processName}");
-                }
-            }
-            catch (Exception e)
-            {
-                Log($"Error stopping process: {e.Message}");
-            }
-        }
-
-
-        private void RemoveServices(string[] keywords, string[] literals, ProgressBar bar)
-        {
-            try
-            {
-                List<string> validServices = new List<string>();
-
-                foreach (string service in keywords)
-                {
-                    ProcessStartInfo funcInfo = new ProcessStartInfo()
-                    {
-                        FileName = "powershell.exe",
-                        Arguments = "Get-Service | Where-Object { $_.Name -match " + $"'{service}'" + "}" + " | Select-Object -ExpandProperty Name",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true,
-                        UseShellExecute = false
-                    };
-
-                    // Start the program/args
-                    var process = Process.Start(funcInfo);
-
-                    // Get whole output, if text trim and save
-                    string output = process.StandardOutput.ReadToEnd();
-
-                    // If there's a keyword found (names will output), save it
-                    if (!string.IsNullOrEmpty(output) && !string.IsNullOrWhiteSpace(output))
-                    {
-                        Log($"Valid service found: {output}");
-                        validServices.Add(output.Trim());
-                    }
-                }
-                // Process all literal services; makes sure unrelated services aren't deleted
-                foreach (string service in literals)
-                {
-                    if (RunReturn("powershell.exe", "Get-Service | Where-Object { $_.Name -eq " + $"{service}" + "}" + " | Select-Object -ExpandProperty Name"))
-                    {
-                        Log($"Valid service found: {service}");
-                        validServices.Add(service);
-                    }
-
-                }
-                // Stop/Delete all services
-                foreach (string service in validServices)
-                {
-                    RunTerminal("sc.exe", $"stop \"{service}\"");
-                    RunTerminal("sc.exe", $"delete \"{service}\"");
-                    Log($"Removed: {service}");
-                }
-            }
-            catch (Exception e)
-            {
-                Log($"Error removing services: {e.Message}");
-            }
-
-        }
-
         private void InstallServices(string installFile)
         {
-            Log($"===Installing Skyview Services===");
-            setStatus("Installing Skyview Services...");
-            statusText.Invoke((MethodInvoker)(() => servicesLabel.Text = "Installing Skyview Services"));
+            
 
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string scriptDir = AppDomain.CurrentDomain.BaseDirectory;
