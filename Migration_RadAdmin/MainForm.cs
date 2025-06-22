@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using static System.Formats.Asn1.AsnWriter;
+using System.Net.Http;
 
 namespace Migration_RadAdmin
 {
@@ -103,24 +104,7 @@ namespace Migration_RadAdmin
                         }
                         else if (!chrome && !winget && !choco)
                         {
-                            // If there's no package manager installed, try to donwload chocolatey
-                            choco = InstallChocolatey();
-
-                            // Restart PowerShell to apply changes
-                            RestartPowershell();
-
-                            if (choco)
-                            {
-                                Log("Installing Chrome via chocolatey (this may take a few minutes)");
-                                RunTerminal("powershell.exe", "choco install googlechrome -y");
-                            }
-                            else
-                            {
-                                Log("No package manager installed; Chrome must be downloaded manually.");
-                                Log("===MANUAL ACTION REQURED===");
-                                Log("If you have Firefox installed, it will open the download page for Chrome.");
-                                RunTerminal("cmd.exe", $@"/c start firefox https://www.google.com/chrome/");
-                            }
+                            Task task = GetChrome();
                         }
                         else
                         {
@@ -164,6 +148,24 @@ namespace Migration_RadAdmin
                     MessageBox.Show("Migration completed successfully.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             });
+        }
+
+        private async Task GetChrome()
+        {
+            var url = "https://dl.google.com/chrome/install/latest/chrome_installer.exe";
+            var filePath = "chrome_installer.exe";
+
+            using var httpClient = new HttpClient();
+            using var response = await httpClient.GetAsync(url);
+
+            response.EnsureSuccessStatusCode();
+
+            await using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+            await response.Content.CopyToAsync(fs);
+
+            Log("Chrome download complete!");
+
+            RunTerminal("cmd.exe", $"/c {filePath} /quiet");
         }
 
         private void stopButton_Click(object sender, EventArgs e)
