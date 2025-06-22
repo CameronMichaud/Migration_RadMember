@@ -53,15 +53,15 @@ namespace Migration_RadAdmin
             {
                 if (MigrationState == 0)
                 {
-                    await RunFunction("Installing .NET SDKs", dotnetProgress, () =>
+                    await RunFunction("Installing .NET SDKs", dotnetProgress, async () =>
                     {
                         bool dotnet6 = DotNetInstalled("6");
                         if (!dotnet6)
                         {
                             // DOWNLOAD
-                            Log("Dowloading via curl .NET 6 (this may take a few minutes)");
+                            Log("Dowloading .NET 6 (this may take a few minutes)");
                             string dotnet6URL = "https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe";
-                            Task task = GetInstaller(dotnet6URL, $@"C:\\users\{currentUser}\desktop\dotnet6.exe");
+                            await GetInstaller(dotnet6URL, $@"C:\\users\{currentUser}\desktop\dotnet6.exe");
 
                             // INSTALL
                             Log("Installing .NET 6 (this may take a few minutes)");
@@ -79,9 +79,9 @@ namespace Migration_RadAdmin
                         if (!dotnet8)
                         {
                             // DOWNLOAD
-                            Log("Dowloading via curl .NET 8 (this may take a few minutes)");
+                            Log("Dowloading .NET 8 (this may take a few minutes)");
                             string dotnet8URL = "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe";
-                            Task task = GetInstaller(dotnet8URL, $@"C:\\users\{currentUser}\desktop\dotnet8.exe");
+                            await GetInstaller(dotnet8URL, $@"C:\\users\{currentUser}\desktop\dotnet8.exe");
 
                             // INSTALL
                             Log("Installing .NET 8 (this may take a few minutes)");
@@ -94,7 +94,7 @@ namespace Migration_RadAdmin
                         }
                     });
 
-                    await RunFunction("Installing Chrome", chromeProgress, () =>
+                    await RunFunction("Installing Chrome", chromeProgress, async () =>
                     {
                         bool chrome = IsInstalled("chrome.exe", "--version");
                         bool winget = IsInstalled("winget.exe", "--version");
@@ -112,8 +112,11 @@ namespace Migration_RadAdmin
                         }
                         else if (!chrome && !winget && !choco)
                         {
-                            string chromeInstaller = "https://dl.google.com/chrome/install/latest/chrome_installer.exe";
-                            Task task = GetInstaller(chromeInstaller, $@"C:\\users\{currentUser}\destkop\chrome_installer.exe");
+                            string chromeInstaller = @"https://dl.google.com/chrome/install/latest/chrome_installer.exe";
+                            string filePath = $@"C:\\users\{currentUser}\desktop\chrome_installer.exe";
+                            await GetInstaller(chromeInstaller, filePath);
+                            Log("Installing Chrome (this may take a few minutes)");
+                            RunTerminal("cmd.exe", $"/c \"{filePath} /silent /install\"");
                         }
                         else
                         {
@@ -121,7 +124,7 @@ namespace Migration_RadAdmin
                         }
                     });
 
-                    await RunFunction("Removing Local Services", cleanProgress, () =>
+                    await RunFunction("Removing Local Services", cleanProgress, async () =>
                     {
                         RemoveAll(cleanProgress);
                         setProgress(cleanProgress, 50);
@@ -143,7 +146,7 @@ namespace Migration_RadAdmin
                 }
                 else
                 {
-                    await RunFunction("Updating Users", userProgress, () =>
+                    await RunFunction("Updating Users", userProgress, async () =>
                     {
                         DeleteUser("Kiosk");
                         setProgress(userProgress, 50);
@@ -169,9 +172,7 @@ namespace Migration_RadAdmin
             await using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
             await response.Content.CopyToAsync(fs);
 
-            Log("Chrome download complete!");
-
-            RunTerminal("cmd.exe", $"/c {filePath} /quiet");
+            Log($"{filePath} download complete!");
         }
 
         private void stopButton_Click(object sender, EventArgs e)
@@ -179,13 +180,13 @@ namespace Migration_RadAdmin
             Close();
         }
 
-        private async Task RunFunction(string title, ProgressBar bar, Action action)
+        private async Task RunFunction(string title, ProgressBar bar, Func<Task> action)
         {
             setStatus($"{title}...");
             Log($"==={title}===");
             setProgress(bar, 25);
 
-            action();
+            await action();
             setProgress(bar, 100);
         }
 
@@ -302,39 +303,6 @@ namespace Migration_RadAdmin
             catch
             {
                 Log($".NET version {version} not found");
-                return false;
-            }
-        }
-
-        private bool InstallChocolatey()
-        {
-            try
-            {
-                // Check if Chocolatey is already installed
-                if (IsInstalled("choco.exe", "-?"))
-                {
-                    Log("Chocolatey is already installed.");
-                    return true;
-                }
-                // Download and install Chocolatey
-                // Following the guide for https://chocolatey.org/install
-                Log("Installing Chocolatey...");
-                RunTerminal("powershell.exe", "Set-ExecutionPolicy Bypass -Scope Process; Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))");
-                // Verify installation
-                if (IsInstalled("choco.exe", "-?"))
-                {
-                    Log("Chocolatey installed successfully.");
-                    return true;
-                }
-                else
-                {
-                    Log("Chocolatey installation failed.");
-                    return false;
-                }
-            }
-            catch (Exception e)
-            {
-                Log($"Error installing Chocolatey: {e.Message}");
                 return false;
             }
         }
@@ -465,26 +433,6 @@ namespace Migration_RadAdmin
             }
         }
 
-        private void RemoveDirectory(string path)
-        {
-            try
-            {
-                if (Directory.Exists(path))
-                {
-                    Log($"Removing directory: {path}");
-                    Directory.Delete(path, true);
-                }
-                else
-                {
-                    Log($"Directory not found: {path}");
-                }
-            }
-            catch (Exception e)
-            {
-                Log($"Error removing directory: {e.Message}");
-            }
-        }
-
         private void Log(string msg)
         {
             outputBox.Invoke((MethodInvoker)(() =>
@@ -525,15 +473,11 @@ namespace Migration_RadAdmin
 
         private void RemoveAll(ProgressBar bar)
         {
-            string[] wildcards = new[] { "radianse", "airpointe", "tanning", "massage", "kiosk", "local services" };
+            string[] wildcards = new[] { "radianse", "airpointe", "local services", "tanning", "massage", "kiosk", "local services" };
             string[] literals = new[] { "UpdateService", "ServiceManager" };
 
             RemovePrograms(wildcards, bar);
             RemoveServices(wildcards, literals, bar);
-
-            Log("Removing Radianse & AirPointe program files directories:");
-            RemoveDirectory("C:\\Program Files (x86)\\Radianse");
-            RemoveDirectory("C:\\Program Files (x86)\\AirPointe");
 
             setProgress(bar, 75);
         }
@@ -545,6 +489,9 @@ namespace Migration_RadAdmin
                 "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
                 "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
             };
+
+            // Stop programs before deleting
+            StopPrograms(keywords);
 
             foreach (string path in registries)
             {
@@ -561,20 +508,18 @@ namespace Migration_RadAdmin
 
                     // Try to pull the quiet uninstall, if not possible, pull the normal uninstall string
                     string uninstallString = subKey.GetValue("QuietUninstallString")?.ToString() ?? subKey.GetValue("UninstallString")?.ToString();
-                    
+
                     // Visual Studio was angry
                     if (string.IsNullOrEmpty(uninstallString))
                     {
                         Log($"No uninstall string found for {subKeyName}");
-                        continue; 
                     }
-                    
-                    // Stop programs before deleting
-                    StopPrograms(keywords);
-
-                    // Uninstall hits
-                    Log($"Uninstalling: {subKey.GetValue("DisplayName")?.ToString()}");
-                    RunTerminal("cmd.exe", $"/c {uninstallString} /quiet");
+                    else
+                    {
+                        // Uninstall hits
+                        Log($"Uninstalling: {subKey.GetValue("DisplayName")?.ToString()}");
+                        RunTerminal("cmd.exe", $"/c {uninstallString} /quiet");
+                    }
                 }
 
                 setProgress(bar, 50);
@@ -722,19 +667,6 @@ namespace Migration_RadAdmin
             else
             {
                 Log($"No services found at: {desktopPath} || {migrationInstallPath}");
-            }
-        }
-        private void RestartPowershell()
-        {
-            try
-            {
-                // Fixes chocolatey
-                RunTerminal("powershell.exe", "-Command \"Set-ExecutionPolicy Bypass -Scope Process -Force; exit\"");
-                Log("PowerShell context refreshed.");
-            }
-            catch (Exception e)
-            {
-                Log($"Error refreshing PowerShell context: {e.Message}");
             }
         }
 
