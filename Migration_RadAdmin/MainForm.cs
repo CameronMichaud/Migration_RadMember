@@ -566,7 +566,7 @@ namespace Migration_RadAdmin
 
                     // Uninstall hits
                     Log($"Uninstalling: {subKey.GetValue("DisplayName")?.ToString()}");
-                    RunTerminal("cmd.exe", $"/c \"{uninstallString}\"");
+                    RunTerminal("cmd.exe", $"/c {uninstallString} /quiet");
                 }
 
                 setProgress(bar, 50);
