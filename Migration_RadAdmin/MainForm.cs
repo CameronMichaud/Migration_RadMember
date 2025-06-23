@@ -64,6 +64,8 @@ namespace Migration_RadAdmin
                             string dotnet6URL = "https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe";
                             await GetInstaller(dotnet6URL, $@"C:\\users\{currentUser}\desktop\dotnet6.exe");
 
+                            setProgress(dotnetProgress, 40);
+
                             // INSTALL
                             Log("Installing .NET 6 (this may take a few minutes)");
                             RunTerminal("cmd.exe", $@"/c start C:\\users\{currentUser}\desktop\dotnet6.exe /quiet");
@@ -83,6 +85,8 @@ namespace Migration_RadAdmin
                             Log("Dowloading .NET 8 (this may take a few minutes)");
                             string dotnet8URL = "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe";
                             await GetInstaller(dotnet8URL, $@"C:\\users\{currentUser}\desktop\dotnet8.exe");
+
+                            setProgress(dotnetProgress, 75);
 
                             // INSTALL
                             Log("Installing .NET 8 (this may take a few minutes)");
@@ -116,6 +120,7 @@ namespace Migration_RadAdmin
                             string chromeInstaller = @"https://dl.google.com/chrome/install/latest/chrome_installer.exe";
                             string filePath = $@"C:\\users\{currentUser}\desktop\chrome_installer.exe";
                             await GetInstaller(chromeInstaller, filePath);
+                            setProgress(chromeProgress, 75);
                             Log("Installing Chrome (this may take a few minutes)");
                             RunTerminal("cmd.exe", $"/c \"{filePath} /silent /install\"");
                         }
@@ -167,6 +172,7 @@ namespace Migration_RadAdmin
                     });
 
                     setStatus("Migration Complete!");
+                    startButton.Text = "Complete";
 
                     MessageBox.Show("Migration completed successfully.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
