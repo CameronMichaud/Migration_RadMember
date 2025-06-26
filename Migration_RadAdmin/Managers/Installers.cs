@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Migration_RadAdmin;
+﻿using System.Diagnostics;
+
+using Migration_RadAdmin.Output;
 
 namespace Migration_RadAdmin.Installers;
-using Migration_RadAdmin.Output;
-using Migration_RadAdmin.Processes;
 
 internal class InstallManager
 {
