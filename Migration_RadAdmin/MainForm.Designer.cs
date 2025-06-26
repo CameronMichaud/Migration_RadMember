@@ -228,7 +228,7 @@
         private Label userLabel;
         private Button startButton;
         private Button stopButton;
-        private TextBox outputBox;
+        internal TextBox outputBox;
         private PictureBox pictureBox1;
     }
 }
