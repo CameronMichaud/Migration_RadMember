@@ -16,8 +16,6 @@ namespace Migration_RadAdmin.Users
 
                 if (user)
                 {
-                    string computerName = Environment.MachineName;
-
                     // Delete user
                     ProcessManager.RunDelete("powershell.exe", $"Remove-LocalUser -Name \"{userName}\"");
                     OutputManager.Log($"User '{userName}' deleted successfully.");

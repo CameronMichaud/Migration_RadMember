@@ -75,43 +75,52 @@ internal class InstallManager
         }
     }
 
-    public static void InstallServices(string installFile)
+    public static bool InstallServices(string installFile)
     {
+        // Paths the installer could be, either on the desktop, or the program directory
         string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         string scriptDir = AppDomain.CurrentDomain.BaseDirectory;
 
+        // Get the full paths as strings
         string desktopPath = Path.Combine(desktop, installFile);
         string migrationInstallPath = Path.Combine(scriptDir, installFile);
-
+        
+        // Create two process infos, one for desktop and the other for current directory
         ProcessStartInfo desktopDirectory = new ProcessStartInfo
         {
-            FileName = "msiexec.exe",
-            Arguments = $"/i \"{desktopPath}\" /quiet",
+            FileName = "msiexec",
+            Arguments = $"/i \"{desktopPath}\" /passive",
             UseShellExecute = true
         };
-
         ProcessStartInfo currDirectory = new ProcessStartInfo
         {
-            FileName = "msiexec.exe",
-            Arguments = $"/i \"{migrationInstallPath}\" /quiet",
+            FileName = "msiexec",
+            Arguments = $"/i \"{migrationInstallPath}\" /passive",
             UseShellExecute = true
         };
 
+        // Run the process for which case is true for the MSI, on desktop, or in current directory
         if (File.Exists(desktopPath))
         {
             OutputManager.Log($"Installing Skyview services found at: {desktopPath}");
             var process = Process.Start(desktopDirectory);
             process?.WaitForExit();
+
+            return true;
         }
         else if (File.Exists(migrationInstallPath))
         {
             OutputManager.Log($"Installing Skyview services found at: {migrationInstallPath}");
             var process = Process.Start(currDirectory);
             process?.WaitForExit();
+
+            return true;
         }
         else
         {
             OutputManager.Log($"No services found at: {desktopPath} || {migrationInstallPath}");
+
+            return false;
         }
     }
 }
