@@ -42,8 +42,8 @@
             startButton = new Button();
             stopButton = new Button();
             outputBox = new TextBox();
-            pictureBox1 = new PictureBox();
-            ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+            radianseLogo = new PictureBox();
+            ((System.ComponentModel.ISupportInitialize)radianseLogo).BeginInit();
             SuspendLayout();
             // 
             // titleText
@@ -176,14 +176,14 @@
             outputBox.TabIndex = 12;
             outputBox.WordWrap = false;
             // 
-            // pictureBox1
+            // radianseLogo
             // 
-            pictureBox1.Image = (Image)resources.GetObject("pictureBox1.Image");
-            pictureBox1.Location = new Point(658, 9);
-            pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(139, 32);
-            pictureBox1.TabIndex = 13;
-            pictureBox1.TabStop = false;
+            radianseLogo.Image = (Image)resources.GetObject("radianseLogo.Image");
+            radianseLogo.Location = new Point(658, 9);
+            radianseLogo.Name = "radianseLogo";
+            radianseLogo.Size = new Size(139, 32);
+            radianseLogo.TabIndex = 13;
+            radianseLogo.TabStop = false;
             // 
             // MainForm
             // 
@@ -191,7 +191,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ControlLightLight;
             ClientSize = new Size(809, 542);
-            Controls.Add(pictureBox1);
+            Controls.Add(radianseLogo);
             Controls.Add(outputBox);
             Controls.Add(stopButton);
             Controls.Add(startButton);
@@ -209,26 +209,26 @@
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "MainForm";
             Text = "Radianse Migration Tool";
-            ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)radianseLogo).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
 
-        private Label titleText;
-        private Label statusText;
-        private Label dotnetLabel;
-        private ProgressBar dotnetProgress;
-        private ProgressBar chromeProgress;
-        private Label chromeLabel;
-        private ProgressBar cleanProgress;
-        private Label servicesLabel;
-        private ProgressBar userProgress;
-        private Label userLabel;
-        private Button startButton;
-        private Button stopButton;
+        internal Label titleText;
+        internal Label statusText;
+        internal Label dotnetLabel;
+        internal ProgressBar dotnetProgress;
+        internal ProgressBar chromeProgress;
+        internal Label chromeLabel;
+        internal ProgressBar cleanProgress;
+        internal Label servicesLabel;
+        internal ProgressBar userProgress;
+        internal Label userLabel;
+        internal Button startButton;
+        internal Button stopButton;
         internal TextBox outputBox;
-        private PictureBox pictureBox1;
+        internal PictureBox radianseLogo;
     }
 }
