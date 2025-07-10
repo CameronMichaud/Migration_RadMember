@@ -2,7 +2,6 @@
 using Migration_RadAdmin.Output;
 using Migration_RadAdmin.Processes;
 using Migration_RadAdmin.Users;
-using System.IO;
 
 namespace Migration_RadAdmin.Migration
 {
@@ -25,15 +24,7 @@ namespace Migration_RadAdmin.Migration
                 {
                     // DOWNLOAD
                     OutputManager.Log("Dowloading .NET 6 (this may take a few minutes)");
-                    string dotnet6URL = "https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe";
-                    await InstallManager.GetInstaller(dotnet6URL, $@"C:\\users\{currentUser}\downloads\dotnet6.exe");
-
-                    OutputManager.setProgress(form.dotnetProgress, 40);
-
-                    // INSTALL
-                    OutputManager.Log("Installing .NET 6 (this may take a few minutes)");
-                    ProcessManager.RunTerminal("cmd.exe", $@"/c start C:\\users\{currentUser}\downloads\dotnet6.exe /quiet");
-                    OutputManager.Log(".NET 6 install finished.\n");
+                    InstallDotNet(currentUser, "6", "https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
                 }
                 else
                 {
@@ -47,15 +38,7 @@ namespace Migration_RadAdmin.Migration
                 {
                     // DOWNLOAD
                     OutputManager.Log("Dowloading .NET 8 (this may take a few minutes)");
-                    string dotnet8URL = "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe";
-                    await InstallManager.GetInstaller(dotnet8URL, $@"C:\\users\{currentUser}\downloads\dotnet8.exe");
-
-                    OutputManager.setProgress(form.dotnetProgress, 75);
-
-                    // INSTALL
-                    OutputManager.Log("Installing .NET 8 (this may take a few minutes)");
-                    ProcessManager.RunTerminal("cmd.exe", $@"/c C:\\users\{currentUser}\downloads\dotnet8.exe /quiet");
-                    OutputManager.Log(".NET 8 install finished.\n");
+                    InstallDotNet(currentUser, "8", "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
                 }
                 else
                 {
@@ -63,6 +46,22 @@ namespace Migration_RadAdmin.Migration
                 }
             });
         }
+
+        internal static async void InstallDotNet(string currentUser, string version, string URL)
+        {
+            // DOWNLOAD
+            await InstallManager.GetInstaller(URL, $@"C:\\users\{currentUser}\downloads\dotnet8.exe");
+
+            OutputManager.setProgress(form.dotnetProgress, 75);
+
+            // INSTALL
+            OutputManager.Log($"Installing .NET {version} (this may take a few minutes)");
+            ProcessManager.RunTerminal("cmd.exe", $@"/c C:\\users\{currentUser}\downloads\dotnet8.exe /quiet");
+            OutputManager.Log($".NET {version} install finished.\n");
+
+            File.Delete($@"C:\\users\{currentUser}\downloads\dotnet8.exe");
+        }
+
         internal static async Task UpdateUsers()
         {
             string currentUser = Environment.UserName;
