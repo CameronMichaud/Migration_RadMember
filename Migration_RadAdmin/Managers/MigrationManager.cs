@@ -2,6 +2,7 @@
 using Migration_RadAdmin.Output;
 using Migration_RadAdmin.Processes;
 using Migration_RadAdmin.Users;
+using System.Security.Policy;
 
 namespace Migration_RadAdmin.Migration
 {
@@ -24,7 +25,9 @@ namespace Migration_RadAdmin.Migration
                 {
                     // DOWNLOAD
                     OutputManager.Log("Dowloading .NET 6 (this may take a few minutes)");
-                    InstallDotNet(currentUser, "6", "https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe");
+                    string URL = "https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-win-x64.exe";
+                    await InstallManager.GetInstaller(URL, $@"C:\\users\{currentUser}\downloads\dotnet6.exe");
+                    InstallDotNet(currentUser, "6");
                 }
                 else
                 {
@@ -38,7 +41,9 @@ namespace Migration_RadAdmin.Migration
                 {
                     // DOWNLOAD
                     OutputManager.Log("Dowloading .NET 8 (this may take a few minutes)");
-                    InstallDotNet(currentUser, "8", "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.411/dotnet-sdk-8.0.411-win-x64.exe");
+                    string URL = "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.100/dotnet-sdk-8.0.100-win-x64.exe";
+                    await InstallManager.GetInstaller(URL, $@"C:\\users\{currentUser}\downloads\dotnet8.exe");
+                    InstallDotNet(currentUser, "8");
                 }
                 else
                 {
@@ -47,19 +52,16 @@ namespace Migration_RadAdmin.Migration
             });
         }
 
-        internal static async void InstallDotNet(string currentUser, string version, string URL)
+        internal static void InstallDotNet(string currentUser, string version)
         {
-            // DOWNLOAD
-            await InstallManager.GetInstaller(URL, $@"C:\\users\{currentUser}\downloads\dotnet8.exe");
-
             OutputManager.setProgress(form.dotnetProgress, 75);
 
             // INSTALL
             OutputManager.Log($"Installing .NET {version} (this may take a few minutes)");
-            ProcessManager.RunTerminal("cmd.exe", $@"/c C:\\users\{currentUser}\downloads\dotnet8.exe /quiet");
+            ProcessManager.RunTerminal("cmd.exe", $@"/c C:\\users\{currentUser}\downloads\dotnet{version}.exe /quiet");
             OutputManager.Log($".NET {version} install finished.\n");
 
-            File.Delete($@"C:\\users\{currentUser}\downloads\dotnet8.exe");
+            File.Delete($@"C:\\users\{currentUser}\downloads\dotnet{version}.exe");
         }
 
         internal static async Task UpdateUsers()
