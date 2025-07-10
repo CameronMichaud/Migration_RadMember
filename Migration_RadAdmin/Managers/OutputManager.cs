@@ -17,5 +17,17 @@
                 form.outputBox.ScrollToCaret();
             }));
         }
+
+        internal static void setProgress(ProgressBar bar, int percentage)
+        {
+            // Update given progress bar
+            bar.Invoke((MethodInvoker)(() => bar.Value = percentage));
+        }
+
+        internal static void setStatus(string status)
+        {
+            // Update status text
+            form.statusText.Invoke((MethodInvoker)(() => form.statusText.Text = status));
+        }
     }
 }

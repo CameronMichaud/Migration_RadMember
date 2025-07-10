@@ -84,35 +84,17 @@ internal class InstallManager
         // Get the full paths as strings
         string desktopPath = Path.Combine(desktop, installFile);
         string migrationInstallPath = Path.Combine(scriptDir, installFile);
-        
-        // Create two process infos, one for desktop and the other for current directory
-        ProcessStartInfo desktopDirectory = new ProcessStartInfo
-        {
-            FileName = "msiexec",
-            Arguments = $"/i \"{desktopPath}\" /passive",
-            UseShellExecute = true
-        };
-        ProcessStartInfo currDirectory = new ProcessStartInfo
-        {
-            FileName = "msiexec",
-            Arguments = $"/i \"{migrationInstallPath}\" /passive",
-            UseShellExecute = true
-        };
 
         // Run the process for which case is true for the MSI, on desktop, or in current directory
         if (File.Exists(desktopPath))
         {
-            OutputManager.Log($"Installing Skyview services found at: {desktopPath}");
-            var process = Process.Start(desktopDirectory);
-            process?.WaitForExit();
+            InstallService(desktopPath);
 
             return true;
         }
         else if (File.Exists(migrationInstallPath))
         {
-            OutputManager.Log($"Installing Skyview services found at: {migrationInstallPath}");
-            var process = Process.Start(currDirectory);
-            process?.WaitForExit();
+            InstallService(migrationInstallPath);
 
             return true;
         }
@@ -122,6 +104,22 @@ internal class InstallManager
 
             return false;
         }
+    }
+
+    private static void InstallService(string path)
+    {
+        ProcessStartInfo funcInfo = new ProcessStartInfo
+        {
+            FileName = "msiexec",
+            Arguments = $"/i \"{path}\" /passive",
+            UseShellExecute = true
+        };
+
+        OutputManager.Log($"Installing Skyview services found at: {path}");
+        var process = Process.Start(funcInfo);
+        process?.WaitForExit();
+
+        File.Delete(path); // Delete the installer after running it
     }
 }
 
