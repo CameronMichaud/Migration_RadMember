@@ -2,6 +2,7 @@
 using Migration_RadAdmin.Output;
 using Migration_RadAdmin.Processes;
 using Migration_RadAdmin.Users;
+using System.Diagnostics;
 
 namespace Migration_RadAdmin.Migration
 {
@@ -17,7 +18,7 @@ namespace Migration_RadAdmin.Migration
         {
             string currentUser = Environment.UserName;
 
-            await form.RunFunction("Installing .NET SDKs", form.dotnetProgress, async () =>
+            await form.RunTask("Installing .NET SDKs", form.dotnetProgress, async () =>
             {
                 bool dotnet6 = InstallManager.DotNetInstalled("6");
                 if (!dotnet6)
@@ -67,7 +68,7 @@ namespace Migration_RadAdmin.Migration
         {
             string currentUser = Environment.UserName;
 
-            await form.RunFunction("Updating Users", form.userProgress, async () =>
+            await form.RunTask("Updating Users", form.userProgress, async () =>
             {
                 if (Environment.UserName.Equals("kiosk", StringComparison.OrdinalIgnoreCase))
                 {
@@ -84,18 +85,13 @@ namespace Migration_RadAdmin.Migration
                     UserManager.RenameUser(currentUser, "Radianse");
                 }
             });
-
-            OutputManager.setStatus("Migration Complete!");
-            form.startButton.Text = "Complete";
-
-            //MessageBox.Show("Migration completed successfully.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         internal static async Task InstallChrome()
         {
             string currentUser = Environment.UserName;
 
-            await form.RunFunction("Installing Chrome", form.chromeProgress, async () =>
+            await form.RunTask("Installing Chrome", form.chromeProgress, async () =>
             {
                 // Check if chrome exists or if there's a package manager, if so use them
                 bool chrome = File.Exists(@"C:\Program Files\Google\Chrome\Application\chrome.exe");
@@ -136,7 +132,7 @@ namespace Migration_RadAdmin.Migration
 
         internal static async Task InstallSkyview()
         {
-            await form.RunFunction("Installing Skyview Services", form.cleanProgress, async () =>
+            await form.RunTask("Installing Skyview Services", form.cleanProgress, async () =>
             {
                 OutputManager.setProgress(form.cleanProgress, 50);
 
@@ -147,6 +143,20 @@ namespace Migration_RadAdmin.Migration
                 }
                 ;
             });
+        }
+
+        internal static void CompleteMigration()
+        {
+            OutputManager.setStatus("Migration Complete!");
+            form.startButton.Text = "Complete";
+
+            MessageBox.Show("Migration completed successfully.", "Migration Complete!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        internal static async Task DeleteServiceCentral()
+        {
+            OutputManager.setStatus(@"Deleting Service Central (C:\ProgramData\Radianse)");
+            await Task.Run(() => ProcessManager.DeleteServiceCentral());
         }
 
         internal static void SetStartup()

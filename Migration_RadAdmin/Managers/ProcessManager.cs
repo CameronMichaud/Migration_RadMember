@@ -1,6 +1,5 @@
-﻿using System.Diagnostics;
-
-using Migration_RadAdmin.Output;
+﻿using Migration_RadAdmin.Output;
+using System.Diagnostics;
 
 namespace Migration_RadAdmin.Processes
 {
@@ -117,6 +116,67 @@ namespace Migration_RadAdmin.Processes
             {
                 OutputManager.Log($"Error removing services: {e.Message}");
                 return false;
+            }
+        }
+        internal static int GetDriveSpace()
+        {
+            try
+            {
+                DriveInfo[] drives = DriveInfo.GetDrives();
+
+                foreach (DriveInfo drive in drives)
+                {
+                    if (drive.Name.Equals(@"C:\", StringComparison.OrdinalIgnoreCase))
+                    {
+                        int size = (int)(drive.TotalSize / (1024 * 1024 * 1024)); // Convert to GB
+                        return size; // Return the size of the C: drive in GB
+                    }
+                }
+
+                return 0; // If C: drive not found, return 0
+            }
+            catch (Exception e)
+            {
+                OutputManager.Log($"Error getting drive space: {e.Message}");
+                return 0;
+            }
+        }
+
+        internal static void DeleteServiceCentral()
+        {
+            try
+            {
+                if (Directory.Exists(@"C:\ProgramData\Radianse"))
+                {
+                    OutputManager.Log(@"Directory found: C:\ProgramData\Radianse");
+                    OutputManager.Log(@"Deleting directory: C:\ProgramData\Radianse");
+                    
+                    // Get space before and after deletion, and delete the directory
+                    int spaceBefore = GetDriveSpace();
+
+                    Directory.Delete(@"C:\ProgramData\Radianse", true);
+
+                    int spaceAfter = GetDriveSpace();
+
+                    // If spaceBefore and spaceAfter are both valid, log the difference
+                    if ((spaceBefore != 0) && (spaceAfter != 0))
+                    {
+                        OutputManager.Log($"Space freed: {spaceBefore - spaceAfter} GB.");
+                    }
+                    else
+                    {
+                        OutputManager.Log("Error calculating space before or after deletion.");
+                    }
+                }
+                else
+                {
+                    OutputManager.Log(@"Directory not found: C:\ProgramData\Radianse");
+                }
+            }
+            catch (Exception e)
+            {
+                OutputManager.Log($"Error deleting directory: {e.Message}");
+                Process.Start("explorer.exe", @"C:\ProgramData\Radianse"); // Open the directory in explorer to delete manually
             }
         }
     }
