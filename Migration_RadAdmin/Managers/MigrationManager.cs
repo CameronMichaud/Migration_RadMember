@@ -95,21 +95,9 @@ namespace Migration_RadAdmin.Migration
             {
                 // Check if chrome exists or if there's a package manager, if so use them
                 bool chrome = File.Exists(@"C:\Program Files\Google\Chrome\Application\chrome.exe");
-                bool winget = InstallManager.IsInstalled("winget.exe", "--version");
-                bool choco = InstallManager.IsInstalled("choco.exe", "-?");
 
-                // If chrome does not exist, try a package manager, else grab directly form URL
-                if (!chrome && winget)
-                {
-                    OutputManager.Log("Installing Chrome via winget (this may take a few minutes)");
-                    ProcessManager.RunTerminal("powershell.exe", "winget install Google.Chrome --silent --accept-source-agreements --accept-package-agreements");
-                }
-                else if (!chrome && !winget && choco)
-                {
-                    OutputManager.Log("Installing Chrome via chocolatey (this may take a few minutes)");
-                    ProcessManager.RunTerminal("powershell.exe", "choco install googlechrome -y");
-                }
-                else if (!chrome && !winget && !choco)
+                // If chrome does not exist, grab directly form URL
+                if (!chrome)
                 {
                     // If there's no package manager, download the file
                     string chromeInstaller = @"https://dl.google.com/chrome/install/latest/chrome_installer.exe";
