@@ -125,9 +125,9 @@ namespace Migration_RadAdmin.Migration
                 OutputManager.setProgress(form.cleanProgress, 50);
 
                 // Install Skyview services, if the latest fails, try the previous version
-                if (!InstallManager.InstallServices("skyview-services-3.0.375.msi"))
+                if (!InstallManager.InstallServices("skyview-services-3.0.377.msi"))
                 {
-                    InstallManager.InstallServices("skyview-services-3.0.365.msi");
+                    InstallManager.InstallServices("skyview-services-3.0.375.msi");
                 }
                 ;
             });
