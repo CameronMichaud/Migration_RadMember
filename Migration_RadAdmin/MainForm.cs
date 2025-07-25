@@ -42,11 +42,16 @@ namespace Migration_RadAdmin
 
         private async void Main()
         {
+            // Removes C:\ProgramData\Radianse, old log files ~20-80 GB
+            await MigrationManager.DeleteServiceCentral();
+
+            // Rest of Migration
             await MigrationManager.InstallDotNets();
             await MigrationManager.InstallChrome();
             await MigrationManager.InstallSkyview();
-            MigrationManager.SetStartup();
             await MigrationManager.UpdateUsers();
+            MigrationManager.SetStartup();
+            MigrationManager.CompleteMigration();
         }
 
         private async void startButton_Click(object sender, EventArgs e)
@@ -61,7 +66,7 @@ namespace Migration_RadAdmin
             Close();
         }
 
-        internal async Task RunFunction(string title, ProgressBar bar, Func<Task> task)
+        internal async Task RunTask(string title, ProgressBar bar, Func<Task> task)
         {
             OutputManager.setStatus($"{title}...");
             OutputManager.Log($"==={title}===");
