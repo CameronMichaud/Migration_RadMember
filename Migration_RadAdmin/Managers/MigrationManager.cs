@@ -82,7 +82,7 @@ namespace Migration_RadAdmin.Migration
                     OutputManager.setProgress(form.userProgress, 50);
                     UserManager.RemoveUserPassword(currentUser);
                     OutputManager.setProgress(form.userProgress, 75);
-                    UserManager.RenameUser(currentUser, "Radianse");
+                    //UserManager.RenameUser(currentUser, "Radianse");
                 }
             });
         }
