@@ -77,34 +77,39 @@ internal class InstallManager
 
     public static void GetServices()
     {
-        string path = AppDomain.CurrentDomain.BaseDirectory;
-        DirectoryInfo directory = new DirectoryInfo(path);
-        FileInfo[] files = directory.GetFiles("skyview-services*.txt");
-
-        foreach (var file in files)
+        try
         {
-            OutputManager.Log(file.Name);
-        }
+            // Grab al files in the current directory that has skyview-services*.txt
+            string path = AppDomain.CurrentDomain.BaseDirectory;
+            DirectoryInfo directory = new DirectoryInfo(path);
+            FileInfo[] files = directory.GetFiles("skyview-services*.txt");
 
-        var servicesVersions = new List<(string filename, int[] version)>();
-        foreach (var file in files)
-        {
-            int[] version = GetVersion(file.Name);
-            servicesVersions.Add((file.Name, version));
-        }
-
-        var latest = servicesVersions[0];
-        foreach (var file in servicesVersions)
-        {
-            if (CompareVersions(file.version, latest.version) > 0) // Returned True
+            // Make a map of the services and their versions
+            var servicesVersions = new List<(string filename, int[] version)>();
+            foreach (var file in files)
             {
-                latest = file;
+                int[] version = GetVersion(file.Name);
+                servicesVersions.Add((file.Name, version));
             }
+
+            // Iterate over the map, get the latest version
+            var latest = servicesVersions[0];
+            foreach (var file in servicesVersions)
+            {
+                if (CompareVersions(file.version, latest.version) > 0) // Returned True
+                {
+                    latest = file;
+                }
+            }
+
+            // Install latest MSI
+            OutputManager.Log($"Latest version: {latest.filename}");
+            InstallServices($"{latest.filename}.msi");
         }
-
-        OutputManager.Log($"Latest version: {latest.filename}");
-
-        InstallServices($"{latest.filename}.msi");
+        catch (Exception ex)
+        {
+            OutputManager.Log($"Services not found: {ex.Message}");
+        }
     }
 
     static int[] GetVersion(string filename)

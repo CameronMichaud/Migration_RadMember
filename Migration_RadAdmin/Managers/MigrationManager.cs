@@ -146,7 +146,7 @@ namespace Migration_RadAdmin.Migration
         internal static void SetStartup()
         {
             // INSTALL RADIANSE.IO AS APPLICATION:
-            OutputManager.setStatus("Manual Action Required. (Install Radianse.io as app)");
+            OutputManager.setStatus("Creating Radianse Shortcuts...");
 
             // Open radianse.io in Chrome, run shell:startup
             ProcessManager.ConfigureChrome();

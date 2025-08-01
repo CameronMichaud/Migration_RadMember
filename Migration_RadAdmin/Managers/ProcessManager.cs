@@ -9,30 +9,63 @@ namespace Migration_RadAdmin.Processes
     {
         public static void ConfigureChrome()
         {
+            OutputManager.Log("===Configuring Chrome===");
 
-            // Start shell:startup for chrome shortcut
-            Process.Start("explorer.exe", "shell:startup");
-
-            // Start Chrome if it exists and open to skyview admin page
+            // Create shortcut to Radinse on desktop and startup folder
             string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
             if (System.IO.File.Exists(chromePath))
             {
-                WshShell shell = new WshShell();
+                try
+                {
+                    // Create a shortcut to Radianse on the desktop
+                    WshShell shell = new WshShell();
 
-                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                string link = "https://radianse.io";
-                string flags = "--start-fullscreen";
+                    // Desktop folder path
+                    string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    
+                    // Chrome args
+                    string link = "https://radianse.io";
+                    string flags = "--start-fullscreen";
 
-                string path = desktop + "Radianse" + ".lnk";
+                    // Shortcut path
+                    string path = Path.Combine(desktop + @"\Radianse.lnk");
 
-                IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(link);
-                
-                shortcut.TargetPath = chromePath;
-                shortcut.Arguments = $"--app{link} {flags}";
-                shortcut.Description = "Open Radianse";
-                shortcut.IconLocation = Path.Combine(Application.StartupPath, "rad_icon_green.ico");
+                    // Create the shortcut
+                    IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(path);
 
-                shortcut.Save();
+                    shortcut.TargetPath = chromePath;
+                    shortcut.Arguments = $"--app={link} {flags}";
+                    shortcut.Description = "Open Radianse";
+
+                    shortcut.Save();
+                    OutputManager.Log($"Chrome shortcut created on desktop: {path}");
+
+                    // Get the Startup folder path, then copy the shortcut there as well
+                    string startupPath = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+                    string finalPath = Path.Combine(startupPath, "Radianse.lnk");
+
+                    String[] files = Directory.GetFiles(startupPath);
+
+                    foreach (string file in files)
+                    {
+                        System.IO.File.Delete(file); // Delete all files in the startup folder
+                        OutputManager.Log($"Deleted file in startup folder: {file}");
+                    }
+
+                    System.IO.File.Copy(path, finalPath, true);
+                    if (System.IO.File.Exists(finalPath))
+                    {
+                        OutputManager.Log($"Chrome shortcut created in startup folder: {finalPath}");
+                    }
+                    else
+                    {
+                        OutputManager.Log($"Failed to create Chrome shortcut in startup folder: {finalPath}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    OutputManager.Log($"Error creating Chrome shortcut: {e.Message}");
+                }
             }
             else
             {
@@ -140,22 +173,13 @@ namespace Migration_RadAdmin.Processes
         {
             try
             {
-                DriveInfo[] drives = DriveInfo.GetDrives();
-
-                foreach (DriveInfo drive in drives)
-                {
-                    if (drive.Name.Equals(@"C:\", StringComparison.OrdinalIgnoreCase))
-                    {
-                        int size = (int)(drive.TotalSize / (1024 * 1024 * 1024)); // Convert to GB
-                        return size; // Return the size of the C: drive in GB
-                    }
-                }
-
-                return 0; // If C: drive not found, return 0
+                DriveInfo drive = new DriveInfo("C");
+                int size = (int)(drive.AvailableFreeSpace / (1024 * 1024 * 1024));
+                return size;
             }
             catch (Exception e)
             {
-                OutputManager.Log($"Error getting drive space: {e.Message}");
+                OutputManager.Log($"Error getting drive free space: {e.Message}");
                 return 0;
             }
         }
@@ -179,7 +203,7 @@ namespace Migration_RadAdmin.Processes
                     // If spaceBefore and spaceAfter are both valid, log the difference
                     if ((spaceBefore != 0) && (spaceAfter != 0))
                     {
-                        OutputManager.Log($"Space freed: {spaceBefore - spaceAfter} GB.");
+                        OutputManager.Log($"Space freed: {spaceAfter - spaceBefore} GB.");
                     }
                     else
                     {

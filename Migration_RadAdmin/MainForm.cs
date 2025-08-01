@@ -48,8 +48,8 @@ namespace Migration_RadAdmin
             await MigrationManager.InstallDotNets();
             await MigrationManager.InstallChrome();
             await MigrationManager.InstallSkyview();
-            await MigrationManager.UpdateUsers();
             MigrationManager.SetStartup();
+            await MigrationManager.UpdateUsers();
             MigrationManager.CompleteMigration();
         }
 
