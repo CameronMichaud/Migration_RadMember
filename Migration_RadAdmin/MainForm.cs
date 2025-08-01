@@ -35,7 +35,6 @@ namespace Migration_RadAdmin
                 MessageBox.Show($"Current user is 'kiosk'.\nPlease run as Pf_Admin or Radianse, users will not be updated", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
-            // Buttons won't work without this, I'm unsure why
             startButton.Click += startButton_Click;
             stopButton.Click += stopButton_Click;
         }
@@ -49,8 +48,8 @@ namespace Migration_RadAdmin
             await MigrationManager.InstallDotNets();
             await MigrationManager.InstallChrome();
             await MigrationManager.InstallSkyview();
-            await MigrationManager.UpdateUsers();
             MigrationManager.SetStartup();
+            await MigrationManager.UpdateUsers();
             MigrationManager.CompleteMigration();
         }
 

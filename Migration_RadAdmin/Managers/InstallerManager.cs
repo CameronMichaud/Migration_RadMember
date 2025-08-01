@@ -75,24 +75,80 @@ internal class InstallManager
         }
     }
 
+    public static void GetServices()
+    {
+        try
+        {
+            // Grab al files in the current directory that has skyview-services*.txt
+            string path = AppDomain.CurrentDomain.BaseDirectory;
+            DirectoryInfo directory = new DirectoryInfo(path);
+            FileInfo[] files = directory.GetFiles("skyview-services*.txt");
+
+            // Make a map of the services and their versions
+            var servicesVersions = new List<(string filename, int[] version)>();
+            foreach (var file in files)
+            {
+                int[] version = GetVersion(file.Name);
+                servicesVersions.Add((file.Name, version));
+            }
+
+            // Iterate over the map, get the latest version
+            var latest = servicesVersions[0];
+            foreach (var file in servicesVersions)
+            {
+                if (CompareVersions(file.version, latest.version) > 0) // Returned True
+                {
+                    latest = file;
+                }
+            }
+
+            // Install latest MSI
+            OutputManager.Log($"Latest version: {latest.filename}");
+            InstallServices($"{latest.filename}.msi");
+        }
+        catch (Exception ex)
+        {
+            OutputManager.Log($"Services not found: {ex.Message}");
+        }
+    }
+
+    static int[] GetVersion(string filename)
+    {
+        // Assuming format: Skyview-Services-x.x.xxx.msi
+        char v1 = filename[17];
+        char v2 = filename[19];
+        string v3 = filename.Substring(21, 3);
+
+        // Convert to ints to compare
+        int ver1 = int.Parse(v1.ToString());
+        int ver2 = int.Parse(v2.ToString());
+        int ver3 = int.Parse(v3);
+
+        // Return int array of the versions
+        return new int[] { ver1, ver2, ver3 };
+    }
+
+    static int CompareVersions(int[] v1, int[] v2)
+    {
+        // Compare version arrays, newer:1, older:-1, same:0
+        for (int i = 0; i < 3; i++)
+        {
+            if (v1[i] > v2[i]) return 1;    // Version is newer
+            if (v1[i] < v2[i]) return -1;   // Version is older
+        }
+        return 0; // Same version
+    }
+
     public static bool InstallServices(string installFile)
     {
-        // Paths the installer could be, either on the desktop, or the program directory
-        string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        // Directory of the exe
         string scriptDir = AppDomain.CurrentDomain.BaseDirectory;
 
-        // Get the full paths as strings
-        string desktopPath = Path.Combine(desktop, installFile);
+        // Get the full path as string
         string migrationInstallPath = Path.Combine(scriptDir, installFile);
 
-        // Run the process for which case is true for the MSI, on desktop, or in current directory
-        if (File.Exists(desktopPath))
-        {
-            InstallService(desktopPath);
-
-            return true;
-        }
-        else if (File.Exists(migrationInstallPath))
+        // Run the process for installing the MSI as found by GetServices()
+        if (File.Exists(migrationInstallPath))
         {
             InstallService(migrationInstallPath);
 
@@ -100,7 +156,7 @@ internal class InstallManager
         }
         else
         {
-            OutputManager.Log($"No services found at: {desktopPath} || {migrationInstallPath}");
+            OutputManager.Log($"No services found at: {migrationInstallPath}");
 
             return false;
         }

@@ -82,7 +82,7 @@ namespace Migration_RadAdmin.Migration
                     OutputManager.setProgress(form.userProgress, 50);
                     UserManager.RemoveUserPassword(currentUser);
                     OutputManager.setProgress(form.userProgress, 75);
-                    //UserManager.RenameUser(currentUser, "Radianse");
+                    UserManager.RenameUser(currentUser, "Radianse");
                 }
             });
         }
@@ -124,12 +124,8 @@ namespace Migration_RadAdmin.Migration
             {
                 OutputManager.setProgress(form.cleanProgress, 50);
 
-                // Install Skyview services, if the latest fails, try the previous version
-                if (!InstallManager.InstallServices("skyview-services-3.0.377.msi"))
-                {
-                    InstallManager.InstallServices("skyview-services-3.0.375.msi");
-                }
-                ;
+                // Install Skyview services
+                InstallManager.GetServices();
             });
         }
 
@@ -150,7 +146,7 @@ namespace Migration_RadAdmin.Migration
         internal static void SetStartup()
         {
             // INSTALL RADIANSE.IO AS APPLICATION:
-            OutputManager.setStatus("Manual Action Required. (Install Radianse.io as app)");
+            OutputManager.setStatus("Creating Radianse Shortcuts...");
 
             // Open radianse.io in Chrome, run shell:startup
             ProcessManager.ConfigureChrome();
