@@ -79,10 +79,10 @@ internal class InstallManager
     {
         try
         {
-            // Grab al files in the current directory that has skyview-services*.txt
+            // Grab al files in the current directory that has skyview-services*.msi
             string path = AppDomain.CurrentDomain.BaseDirectory;
             DirectoryInfo directory = new DirectoryInfo(path);
-            FileInfo[] files = directory.GetFiles("skyview-services*.txt");
+            FileInfo[] files = directory.GetFiles("skyview-services-*.msi");
 
             // Make a map of the services and their versions
             var servicesVersions = new List<(string filename, int[] version)>();
