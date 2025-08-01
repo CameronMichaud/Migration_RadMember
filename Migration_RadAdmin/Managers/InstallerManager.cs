@@ -104,7 +104,7 @@ internal class InstallManager
 
             // Install latest MSI
             OutputManager.Log($"Latest version: {latest.filename}");
-            InstallServices($"{latest.filename}.msi");
+            InstallServices($"{latest.filename}");
         }
         catch (Exception ex)
         {
