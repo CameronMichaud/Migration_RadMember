@@ -1,5 +1,7 @@
-﻿using Migration_RadAdmin.Output;
+﻿using IWshRuntimeLibrary;
+using Migration_RadAdmin.Output;
 using System.Diagnostics;
+using static System.Windows.Forms.DataFormats;
 
 namespace Migration_RadAdmin.Processes
 {
@@ -7,14 +9,30 @@ namespace Migration_RadAdmin.Processes
     {
         public static void ConfigureChrome()
         {
+
             // Start shell:startup for chrome shortcut
             Process.Start("explorer.exe", "shell:startup");
 
             // Start Chrome if it exists and open to skyview admin page
             string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
-            if (File.Exists(chromePath))
+            if (System.IO.File.Exists(chromePath))
             {
-                Process.Start(chromePath, "radianse.io");
+                WshShell shell = new WshShell();
+
+                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string link = "https://radianse.io";
+                string flags = "--start-fullscreen";
+
+                string path = desktop + "Radianse" + ".lnk";
+
+                IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(link);
+                
+                shortcut.TargetPath = chromePath;
+                shortcut.Arguments = $"--app{link} {flags}";
+                shortcut.Description = "Open Radianse";
+                shortcut.IconLocation = Path.Combine(Application.StartupPath, "rad_icon_green.ico");
+
+                shortcut.Save();
             }
             else
             {
