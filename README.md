@@ -1,6 +1,6 @@
 ### Migration_RadAdmin.exe  
 
-Download Migration_RadAdmin.exe and "Skyview-Services-x.x.xxx.msi" to the same directory on target Windows 10 computer.  
+Download Migration_RadAdmin.exe and "Skyview-Services-x.x.xxx.msi" to the same directory on target computer.  
   
 > Hit "Start Migration":
 >
