@@ -75,6 +75,12 @@ jobs:
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v2
 
+      # Restore the application to populate the obj folder with RuntimeIdentifiers
+    - name: Restore the application
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
+
     - name: Publish
       run: dotnet publish ${{ env.Project_Path }} --configuration ${{ matrix.configuration }} --output ./publish --self-contained true /p:PublishSingleFile=true
 
