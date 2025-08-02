@@ -71,8 +71,9 @@ jobs:
       with:
         dotnet-version: 8.0.x
     
-    - name: Build
-      run: dotnet build ${{ env.Project_Path }} --configuration ${{ matrix.configuration }} --no-restore
+     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v2
 
     - name: Publish
       run: dotnet publish ${{ env.Project_Path }} --configuration ${{ matrix.configuration }} --output ./publish --self-contained true /p:PublishSingleFile=true
