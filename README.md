@@ -15,10 +15,3 @@ Download Migration_RadAdmin.exe and "Skyview-Services-x.x.xxx.msi" to the same d
 > - Removes password from user "Radianse"  
 
 Once finished exit the exe and delete Migration_RadAdmin.exe from the target computer.  
-<br>
-
-<p align="center"; margin-top: 80px;>
-  <img src="/Migration_RadAdmin/favicon.ico" alt="RadianseLogo">
-</p>
-
-<p align="center">Radianse Admin Migration Tool</p>
