@@ -13,3 +13,5 @@ Hit "Start Migration":
 - Removes user "Kiosk"  
 - Renames current user to "Radianse"  
 - Removes password from user "Radianse"  
+
+Once finished exit the exe and delete Migration_RadAdmin.exe from the target computer.
