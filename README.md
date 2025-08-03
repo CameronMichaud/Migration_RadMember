@@ -14,5 +14,5 @@ Once finished exit the exe and delete Migration_Member.exe from the target compu
 <br>
 Run in terminal to download:
 ```
-cd && cd Desktop && curl -L -o Migration_Member.exe  "https://github.com/CameronMichaud/Migration_RadMember/releases/download/v1.0/Migration_Member.exe"
+curl -L -o Migration_Member.exe  "https://github.com/CameronMichaud/Migration_RadMember/releases/download/v1.0/Migration_Member.exe"
 ```
