@@ -31,12 +31,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             titleText = new Label();
             statusText = new Label();
-            dotnetLabel = new Label();
-            dotnetProgress = new ProgressBar();
             chromeProgress = new ProgressBar();
             chromeLabel = new Label();
-            cleanProgress = new ProgressBar();
-            servicesLabel = new Label();
             userProgress = new ProgressBar();
             userLabel = new Label();
             startButton = new Button();
@@ -70,28 +66,9 @@
             statusText.Text = "Ready to begin migration...";
             statusText.TextAlign = ContentAlignment.MiddleLeft;
             // 
-            // dotnetLabel
-            // 
-            dotnetLabel.AutoSize = true;
-            dotnetLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            dotnetLabel.Location = new Point(9, 104);
-            dotnetLabel.Margin = new Padding(0);
-            dotnetLabel.Name = "dotnetLabel";
-            dotnetLabel.Size = new Size(106, 17);
-            dotnetLabel.TabIndex = 2;
-            dotnetLabel.Text = "Install .NET SDKs";
-            dotnetLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // dotnetProgress
-            // 
-            dotnetProgress.Location = new Point(12, 124);
-            dotnetProgress.Name = "dotnetProgress";
-            dotnetProgress.Size = new Size(773, 23);
-            dotnetProgress.TabIndex = 3;
-            // 
             // chromeProgress
             // 
-            chromeProgress.Location = new Point(12, 191);
+            chromeProgress.Location = new Point(15, 127);
             chromeProgress.Name = "chromeProgress";
             chromeProgress.Size = new Size(773, 23);
             chromeProgress.TabIndex = 5;
@@ -100,7 +77,7 @@
             // 
             chromeLabel.AutoSize = true;
             chromeLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            chromeLabel.Location = new Point(9, 171);
+            chromeLabel.Location = new Point(12, 107);
             chromeLabel.Margin = new Padding(0);
             chromeLabel.Name = "chromeLabel";
             chromeLabel.Size = new Size(91, 17);
@@ -108,28 +85,9 @@
             chromeLabel.Text = "Install Chrome";
             chromeLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
-            // cleanProgress
-            // 
-            cleanProgress.Location = new Point(12, 259);
-            cleanProgress.Name = "cleanProgress";
-            cleanProgress.Size = new Size(773, 23);
-            cleanProgress.TabIndex = 7;
-            // 
-            // servicesLabel
-            // 
-            servicesLabel.AutoSize = true;
-            servicesLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            servicesLabel.Location = new Point(9, 239);
-            servicesLabel.Margin = new Padding(0);
-            servicesLabel.Name = "servicesLabel";
-            servicesLabel.Size = new Size(163, 17);
-            servicesLabel.TabIndex = 6;
-            servicesLabel.Text = "Remove Radianse Services";
-            servicesLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
             // userProgress
             // 
-            userProgress.Location = new Point(12, 326);
+            userProgress.Location = new Point(15, 188);
             userProgress.Name = "userProgress";
             userProgress.Size = new Size(773, 23);
             userProgress.TabIndex = 9;
@@ -138,7 +96,7 @@
             // 
             userLabel.AutoSize = true;
             userLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            userLabel.Location = new Point(9, 306);
+            userLabel.Location = new Point(12, 168);
             userLabel.Margin = new Padding(0);
             userLabel.Name = "userLabel";
             userLabel.Size = new Size(88, 17);
@@ -148,7 +106,7 @@
             // 
             // startButton
             // 
-            startButton.Location = new Point(610, 371);
+            startButton.Location = new Point(610, 241);
             startButton.Name = "startButton";
             startButton.Size = new Size(143, 68);
             startButton.TabIndex = 10;
@@ -157,7 +115,7 @@
             // 
             // stopButton
             // 
-            stopButton.Location = new Point(610, 462);
+            stopButton.Location = new Point(610, 332);
             stopButton.Name = "stopButton";
             stopButton.Size = new Size(143, 68);
             stopButton.TabIndex = 11;
@@ -167,7 +125,7 @@
             // outputBox
             // 
             outputBox.BackColor = SystemColors.ControlLightLight;
-            outputBox.Location = new Point(15, 371);
+            outputBox.Location = new Point(15, 241);
             outputBox.Multiline = true;
             outputBox.Name = "outputBox";
             outputBox.ReadOnly = true;
@@ -190,19 +148,15 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ControlLightLight;
-            ClientSize = new Size(809, 542);
+            ClientSize = new Size(809, 427);
             Controls.Add(radianseLogo);
             Controls.Add(outputBox);
             Controls.Add(stopButton);
             Controls.Add(startButton);
             Controls.Add(userProgress);
             Controls.Add(userLabel);
-            Controls.Add(cleanProgress);
-            Controls.Add(servicesLabel);
             Controls.Add(chromeProgress);
             Controls.Add(chromeLabel);
-            Controls.Add(dotnetProgress);
-            Controls.Add(dotnetLabel);
             Controls.Add(statusText);
             Controls.Add(titleText);
             FormBorderStyle = FormBorderStyle.Fixed3D;
@@ -218,12 +172,8 @@
 
         internal Label titleText;
         internal Label statusText;
-        internal Label dotnetLabel;
-        internal ProgressBar dotnetProgress;
         internal ProgressBar chromeProgress;
         internal Label chromeLabel;
-        internal ProgressBar cleanProgress;
-        internal Label servicesLabel;
         internal ProgressBar userProgress;
         internal Label userLabel;
         internal Button startButton;

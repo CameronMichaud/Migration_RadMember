@@ -24,7 +24,7 @@ namespace Migration_RadAdmin.Processes
                     string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                     
                     // Chrome args
-                    string link = "https://radianse.io";
+                    string link = "https://schedulekiosk.radianse.io";
                     string flags = "--start-fullscreen";
 
                     // Shortcut path
@@ -167,58 +167,6 @@ namespace Migration_RadAdmin.Processes
             {
                 OutputManager.Log($"Error removing services: {e.Message}");
                 return false;
-            }
-        }
-        internal static int GetDriveSpace()
-        {
-            try
-            {
-                DriveInfo drive = new DriveInfo("C");
-                int size = (int)(drive.AvailableFreeSpace / (1024 * 1024 * 1024));
-                return size;
-            }
-            catch (Exception e)
-            {
-                OutputManager.Log($"Error getting drive free space: {e.Message}");
-                return 0;
-            }
-        }
-
-        internal static void DeleteServiceCentral()
-        {
-            try
-            {
-                if (Directory.Exists(@"C:\ProgramData\Radianse"))
-                {
-                    OutputManager.Log(@"Directory found: C:\ProgramData\Radianse");
-                    OutputManager.Log(@"Deleting directory: C:\ProgramData\Radianse");
-                    
-                    // Get space before and after deletion, and delete the directory
-                    int spaceBefore = GetDriveSpace();
-
-                    Directory.Delete(@"C:\ProgramData\Radianse", true);
-
-                    int spaceAfter = GetDriveSpace();
-
-                    // If spaceBefore and spaceAfter are both valid, log the difference
-                    if ((spaceBefore != 0) && (spaceAfter != 0))
-                    {
-                        OutputManager.Log($"Space freed: {spaceAfter - spaceBefore} GB.");
-                    }
-                    else
-                    {
-                        OutputManager.Log("Error calculating space before or after deletion.");
-                    }
-                }
-                else
-                {
-                    OutputManager.Log(@"Directory not found: C:\ProgramData\Radianse");
-                }
-            }
-            catch (Exception e)
-            {
-                OutputManager.Log($"Error deleting directory: {e.Message}");
-                Process.Start("explorer.exe", @"C:\ProgramData\Radianse"); // Open the directory in explorer to delete manually
             }
         }
     }

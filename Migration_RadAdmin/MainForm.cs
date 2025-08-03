@@ -32,7 +32,7 @@ namespace Migration_RadAdmin
             // If started as kiosk, notify user that they should run as Pf_Admin or Radianse
             if (Environment.UserName.Equals("kiosk", StringComparison.OrdinalIgnoreCase))
             {
-                MessageBox.Show($"Current user is 'kiosk'.\nPlease run as Pf_Admin or Radianse, users will not be updated", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Current user is 'kiosk'.\nPlease run as Pf_Admin or Radianse or change the name of this user, users will not be updated", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
             startButton.Click += startButton_Click;
@@ -41,13 +41,8 @@ namespace Migration_RadAdmin
 
         private async void Main()
         {
-            // Removes C:\ProgramData\Radianse, old log files ~20-80 GB
-            await MigrationManager.DeleteServiceCentral();
-
             // Rest of Migration
-            await MigrationManager.InstallDotNets();
             await MigrationManager.InstallChrome();
-            await MigrationManager.InstallSkyview();
             MigrationManager.SetStartup();
             await MigrationManager.UpdateUsers();
             MigrationManager.CompleteMigration();
