@@ -80,5 +80,16 @@ namespace Migration_RadAdmin.Users
                 OutputManager.Log($"Error setting password: {e.Message}");
             }
         }
+        public static void LogoutUser(string userName)
+        {
+            try
+            {
+                ProcessManager.RunLogoff(userName);
+            }
+            catch (Exception e)
+            {
+                OutputManager.Log($"Error logging out user: {e.Message}");
+            }
+        }
     }
 }
