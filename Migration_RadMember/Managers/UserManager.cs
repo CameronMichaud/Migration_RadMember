@@ -1,9 +1,9 @@
 ﻿using System.DirectoryServices;
 
-using Migration_RadAdmin.Output;
-using Migration_RadAdmin.Processes;
+using Migration_RadMember.Output;
+using Migration_RadMember.Processes;
 
-namespace Migration_RadAdmin.Users
+namespace Migration_RadMember.Users
 {
     internal class UserManager
     {

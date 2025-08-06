@@ -1,9 +1,9 @@
 ﻿using IWshRuntimeLibrary;
-using Migration_RadAdmin.Output;
+using Migration_RadMember.Output;
 using System.Diagnostics;
 using static System.Windows.Forms.DataFormats;
 
-namespace Migration_RadAdmin.Processes
+namespace Migration_RadMember.Processes
 {
     internal class ProcessManager
     {

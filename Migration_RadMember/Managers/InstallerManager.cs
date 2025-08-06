@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 
-using Migration_RadAdmin.Output;
+using Migration_RadMember.Output;
 
-namespace Migration_RadAdmin.Installers;
+namespace Migration_RadMember.Installers;
 
 internal class InstallManager
 {
