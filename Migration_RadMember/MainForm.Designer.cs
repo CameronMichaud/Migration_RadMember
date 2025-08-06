@@ -1,4 +1,4 @@
-﻿namespace Migration_RadAdmin
+﻿namespace Migration_RadMember
 {
     partial class MainForm
     {

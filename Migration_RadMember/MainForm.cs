@@ -1,9 +1,9 @@
-using Migration_RadAdmin.Output;
-using Migration_RadAdmin.Migration;
+using Migration_RadMember.Output;
+using Migration_RadMember.Migration;
 using System.Diagnostics;
 using System.Security.Principal;
 
-namespace Migration_RadAdmin
+namespace Migration_RadMember
 {
     public partial class MainForm : Form
     {

@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace Migration_RadAdmin
+namespace Migration_RadMember
 {
     internal static class Program
     {

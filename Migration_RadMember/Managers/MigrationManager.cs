@@ -1,10 +1,10 @@
-﻿using Migration_RadAdmin.Installers;
-using Migration_RadAdmin.Output;
-using Migration_RadAdmin.Processes;
-using Migration_RadAdmin.Users;
+﻿using Migration_RadMember.Installers;
+using Migration_RadMember.Output;
+using Migration_RadMember.Processes;
+using Migration_RadMember.Users;
 using System.Diagnostics;
 
-namespace Migration_RadAdmin.Migration
+namespace Migration_RadMember.Migration
 {
     internal class MigrationManager
     {

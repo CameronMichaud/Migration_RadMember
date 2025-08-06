@@ -1,4 +1,4 @@
-﻿namespace Migration_RadAdmin.Output
+﻿namespace Migration_RadMember.Output
 {
     internal class OutputManager
     {

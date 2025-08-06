@@ -1,9 +1,9 @@
 ﻿using IWshRuntimeLibrary;
-using Migration_RadAdmin.Output;
+using Migration_RadMember.Output;
 using System.Diagnostics;
 using static System.Windows.Forms.DataFormats;
 
-namespace Migration_RadAdmin.Processes
+namespace Migration_RadMember.Processes
 {
     internal class ProcessManager
     {
@@ -131,12 +131,8 @@ namespace Migration_RadAdmin.Processes
 
                     var lines = OutputLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-                    // If header line, skip, then find kiosk user session
-                    if (lines[0].Equals("USERNAME", StringComparison.OrdinalIgnoreCase))
-                    {
-                        OutputManager.Log($"Skipping user: {lines[0]}");
-                    }
-                    else if (lines[0].Equals(username, StringComparison.OrdinalIgnoreCase) || lines[0].Equals($">{username}", StringComparison.OrdinalIgnoreCase))
+                    // Find Kiosk session
+                    if (lines[0].Equals(username, StringComparison.OrdinalIgnoreCase) || lines[0].Equals($">{username}", StringComparison.OrdinalIgnoreCase))
                     {
                         OutputManager.Log($"User found: {username}");
                         OutputManager.Log($"Logging out user: {lines[0]}");
